@@ -27,5 +27,5 @@ public class UserStudyGroup {
     private StudyGroups studyGroup;
 
     @Enumerated(EnumType.STRING)
-    private GroupRole role; // leader, member
+    private GroupRole role;
 }

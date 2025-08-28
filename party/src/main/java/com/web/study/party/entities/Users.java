@@ -1,6 +1,7 @@
 package com.web.study.party.entities;
 
 import com.web.study.party.entities.enums.Role;
+import com.web.study.party.entities.group.UserStudyGroup;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -28,11 +29,15 @@ public class Users {
     private String password;
 
     private String avatarUrl;
+    private String displayName;
+    private boolean isOnline;
+    private boolean isVerified;
+    private boolean isLocked;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "users", cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private List<UserStudyGroup> studyGroups;
 }
 
