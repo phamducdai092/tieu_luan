@@ -1,4 +1,4 @@
-package com.web.study.party.entities.enums.codeStatus;
+package com.web.study.party.entities.enums;
 
 import lombok.*;
 

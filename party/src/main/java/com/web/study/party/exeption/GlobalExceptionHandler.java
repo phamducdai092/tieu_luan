@@ -4,6 +4,8 @@ import com.web.study.party.dto.response.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,7 +15,10 @@ import org.springframework.web.bind.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -99,7 +104,7 @@ public class GlobalExceptionHandler {
         var body = ApiError.<Void>builder()
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .code("UNAUTHORIZED")
-                .message("Invalid email or password")
+                .message(ex.getMessage())
                 .path(req.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
@@ -160,20 +165,23 @@ public class GlobalExceptionHandler {
                 .build();
         return ResponseEntity.status(status).body(body);
     }
-
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     // 9) Chốt hạ: lỗi chưa bắt
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError<Void>> handleAll(
-            Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ApiError<Void>> handleAll(Exception ex, HttpServletRequest req) {
+
+        // dùng Lombok @Slf4j hoặc LoggerFactory
+        log.error("Unhandled at {} {}:", req.getMethod(), req.getRequestURI(), ex);
+
         var body = ApiError.<Void>builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .code("INTERNAL_ERROR")
-                .message("Something went wrong")
+                .status(500).code("INTERNAL_ERROR")
+                .message(ex.getClass().getSimpleName() + ": " + (ex.getMessage()==null?"n/a":ex.getMessage()))
                 .path(req.getRequestURI())
                 .build();
-        // TODO: log ex đầy đủ (stacktrace) vào logger
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+        return ResponseEntity.status(500).body(body);
     }
+
 
     private String extractParamName(ConstraintViolation<?> cv) {
         // cv.getPropertyPath() => "register.arg0.email" / "email" ... tuỳ case
@@ -183,4 +191,45 @@ public class GlobalExceptionHandler {
         }
         return path;
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(io.jsonwebtoken.security.WeakKeyException.class)
+    public ResponseEntity<ApiError<Void>> handleWeakKey(
+            io.jsonwebtoken.security.WeakKeyException ex, HttpServletRequest req) {
+        var body = ApiError.<Void>builder()
+                .status(500).code("JWT_SECRET_WEAK")
+                .message("JWT secret must be at least 32 bytes (HS256).")
+                .path(req.getRequestURI())
+                .build();
+        return ResponseEntity.status(500).body(body);
+    }
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ApiError<Void>> handleNotFound(Exception ex, HttpServletRequest req) {
+        var body = ApiError.<Void>builder()
+                .status(404).code("NOT_FOUND")
+                .message("Endpoint not found")
+                .path(req.getRequestURI())
+                .build();
+        return ResponseEntity.status(404).body(body);
+    }
+
+    @ExceptionHandler(UnverifiedAccountException.class)
+    public ResponseEntity<ApiError<Void>> handleUnverified(
+            UnverifiedAccountException ex, HttpServletRequest req) {
+        var body = ApiError.<Void>builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .code("ACCOUNT_UNVERIFIED")
+                .message(ex.getMessage())
+                .path(req.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+
 }
