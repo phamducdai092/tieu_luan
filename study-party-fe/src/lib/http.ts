@@ -1,4 +1,3 @@
-// http.ts
 import axios, {
 	AxiosError,
 	type AxiosRequestConfig,

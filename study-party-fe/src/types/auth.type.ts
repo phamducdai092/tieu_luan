@@ -13,9 +13,9 @@ export type User = {
 	avatar_url: string;
 	display_name: string;
 	email: string;
-	is_looked: boolean;
-	is_online: boolean;
-	is_verified: boolean;
+	looked: boolean;
+	online: boolean;
+	verified: boolean;
 	role: 'USER' | 'ADMIN';
 };
 

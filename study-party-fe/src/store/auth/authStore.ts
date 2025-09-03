@@ -1,4 +1,3 @@
-// src/store/authStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthState, LoginPayload } from '@/types/auth.type';
@@ -48,7 +47,7 @@ const useAuthStore = create<AuthState>()(
 				set({ isLoadingMe: true });
 				try {
 					const res = await apiLoadMe();
-					set({ user: res.data, isLoadingMe: false });
+					set({ user: res.data.user, isLoadingMe: false });
 				} catch {
 					// token hỏng/expired -> để interceptor xử lý
 				}
