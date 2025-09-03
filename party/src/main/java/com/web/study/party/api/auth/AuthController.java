@@ -5,7 +5,6 @@ import com.web.study.party.dto.request.user.RegisterRequest;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.TokenResponse;
 import com.web.study.party.dto.response.auth.AuthResponse;
-import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
 import com.web.study.party.jwt.JwtProperties;
 import com.web.study.party.services.auth.AuthService;
@@ -14,8 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,7 +23,6 @@ public class AuthController {
     private final AuthService authService;
     private final JwtProperties jwtProps;
     private AuthResponse authResponse;
-
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest req, HttpServletRequest httpRequest) {
@@ -93,23 +89,6 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header("Set-Cookie", cookie.toString())
                 .body(response);
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<AuthResponse>> me(@AuthenticationPrincipal Users user, HttpServletRequest httpRequest) {
-        if(user == null) {
-            throw new AccessDeniedException("Unauthorized");
-        }
-        authResponse = new AuthResponse(null, null, null, user.getId(), user.getEmail(), user.getRole().name());
-        ApiResponse<AuthResponse> response = ApiResponse.<AuthResponse>builder()
-                .status(CodeStatus.SUCCESS.getCode())
-                .code("SUCCESS")
-                .path(httpRequest.getRequestURI())
-                .data(authResponse)
-                .message("Lấy thông tin người dùng thành công")
-                .build();
-
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/logout")

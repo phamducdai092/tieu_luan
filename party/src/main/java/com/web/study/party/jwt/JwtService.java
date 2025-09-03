@@ -32,6 +32,7 @@ public class JwtService {
         return Jwts.builder()
                 .issuer(props.getIssuer())
                 .subject(user.getId().toString())
+                .claim("type", "access") // ✅ Quan trọng
                 .claim("email", user.getEmail())
                 .claim("role", user.getRole().name())
                 .issuedAt(Date.from(now))
@@ -51,7 +52,7 @@ public class JwtService {
                 .expiration(Date.from(exp))
                 .claim("type", "refresh")
                 .claim("email", user.getEmail())
-                .claim("role",user.getRole().name())
+                .claim("role", user.getRole().name())
                 .signWith(key)
                 .compact();
     }

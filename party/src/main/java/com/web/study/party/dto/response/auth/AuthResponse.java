@@ -1,3 +1,5 @@
 package com.web.study.party.dto.response.auth;
 
-public record AuthResponse(String accessToken, String refreshToken, Long refreshTtlSeconds, Long userId, String email, String role) {}
+import com.web.study.party.dto.user.UserDTO;
+
+public record AuthResponse(String accessToken, String refreshToken, Long refreshTtlSeconds, UserDTO user) {}

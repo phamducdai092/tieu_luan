@@ -1,6 +1,8 @@
 package com.web.study.party.services.auth;
 
 import com.web.study.party.dto.TokenPair;
+import com.web.study.party.dto.user.UserDTO;
+import com.web.study.party.dto.mapper.user.UserMapper;
 import com.web.study.party.dto.request.user.*;
 import com.web.study.party.dto.response.TokenResponse;
 import com.web.study.party.dto.response.auth.AuthResponse;
@@ -31,6 +33,7 @@ public class AuthServiceImp implements AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProps;
     private final RefreshTokenStore refreshTokenStore;
+    private final UserMapper userMapper;
 
     private AuthResponse getAuthResponse(Users user) {
         var jti = jwtService.newJti();
@@ -40,7 +43,9 @@ public class AuthServiceImp implements AuthService {
         long ttlSec  = Duration.of(jwtProps.getRefreshDays(), ChronoUnit.DAYS).toSeconds();
         refreshTokenStore.save(jti, user.getId(), ttlSec);
 
-        return new AuthResponse(accessToken, refreshToken, ttlSec, user.getId(), user.getEmail(), user.getRole().name());
+        UserDTO userDTO = userMapper.toDTO(user);
+
+        return new AuthResponse(accessToken, refreshToken, ttlSec, userDTO);
     }
 
     @Transactional
