@@ -1,15 +1,232 @@
 @import "tailwindcss";
 
-*, *::before, *::after { box-sizing: border-box; }
+@plugin "tailwindcss-animate";
+@custom-variant dark (&:is(.dark *));
 
-html, body, #root {
-  font-family: Arial, Helvetica, sans-serif;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
-main { margin: 0; padding: 0; }
+html, body, #root {
+    font-family: Poppins, Roboto, Arial, Helvetica, sans-serif;
+    font-size: 1.2rem;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
 
-main { overflow-x: clip; }
+html {
+    overflow-y: auto;                 /* đừng để hidden */
+    scrollbar-gutter: stable both-edges;
+}
+
+/* ============================
+   LIGHT TOKENS (Clear Sky)
+   ============================ */
+:root {
+    /* Neutrals */
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+
+    /* BRAND / ACCENT (Clear Sky) */
+    --primary: oklch(0.70 0.18 230);
+    --primary-foreground: oklch(1 0 0);
+    --ring: oklch(0.70 0.18 230);
+
+    /* Secondary / Muted / Accent neutrals */
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+
+    /* Feedback */
+    --destructive: oklch(0.577 0.245 27.325); /* red */
+    --success: oklch(0.74 0.15 170); /* mint/teal */
+    --info: oklch(0.78 0.12 230); /* soft blue */
+    --warning: oklch(0.85 0.16 75); /* amber */
+
+    /* Borders / Inputs */
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+
+    /* Charts (harmonized with Clear Sky) */
+    --chart-1: oklch(0.70 0.18 230); /* blue */
+    --chart-2: oklch(0.64 0.16 190); /* teal */
+    --chart-3: oklch(0.60 0.20 275); /* indigo-violet */
+    --chart-4: oklch(0.82 0.16 75); /* amber */
+    --chart-5: oklch(0.75 0.14 150); /* green */
+
+    /* Radius */
+    --radius: 0.625rem;
+
+    /* Sidebar */
+    --sidebar-width: 16rem;
+    --sidebar-collapsed: 3.75rem;
+
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+
+    --sidebar-primary: oklch(0.70 0.18 230);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.70 0.18 230);
+
+    /* Brand gradient for badges/headers */
+    --brand-from: oklch(0.75 0.16 220);
+    --brand-to: oklch(0.70 0.20 240);
+}
+
+/* ============================
+   DARK TOKENS
+   ============================ */
+.dark {
+    /* Brand updates */
+    --primary: oklch(0.74 0.22 230);
+    --primary-foreground: oklch(0.145 0 0);
+    --ring: oklch(0.74 0.22 230);
+
+    --brand-from: oklch(0.68 0.20 220);
+    --brand-to: oklch(0.66 0.22 240);
+
+    --success: oklch(0.72 0.17 170);
+    --info: oklch(0.74 0.22 230);
+    --warning: oklch(0.80 0.18 75);
+
+    /* Neutrals */
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+
+    /* Secondary / Muted / Accent */
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+
+    /* Borders / Inputs */
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+
+    /* Charts (dark-tuned) */
+    --chart-1: oklch(0.74 0.22 230);
+    --chart-2: oklch(0.70 0.18 190);
+    --chart-3: oklch(0.66 0.22 275);
+    --chart-4: oklch(0.80 0.18 75);
+    --chart-5: oklch(0.72 0.17 150);
+
+    /* Sidebar (dark) */
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+
+    --sidebar-primary: oklch(0.74 0.22 230);
+    --sidebar-primary-foreground: oklch(0.145 0 0);
+
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.74 0.22 230);
+}
+
+/* ============================
+   BASE
+   ============================ */
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+
+    body {
+        background: var(--background);
+        color: var(--foreground);
+    }
+}
+
+/* ============================
+   Tailwind v4 color mapping
+   ============================ */
+@theme inline {
+    /* Extra semantic */
+    --color-success: var(--success);
+    --color-info: var(--info);
+    --color-warning: var(--warning);
+
+    --color-hero-from: var(--brand-from);
+    --color-hero-to: var(--brand-to);
+
+    /* Core mapping */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-destructive: var(--destructive);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* Radius scale (Tailwind v4) */
+    --radius-xs: 0.125rem;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+}
+
+/* Utilities for sidebar title clamp */
+.sidebar-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+[data-state="collapsed"] .sidebar-title,
+[data-collapsed="true"] .sidebar-title {
+    display: none;
+}
+
+@supports not (scrollbar-gutter: stable) {
+    html { overflow-y: scroll; }      /* luôn hiển thị rãnh cuộn */
+}

@@ -12,13 +12,15 @@ import {
 } from '@/components/ui/card';
 import {BookOpen, Users, Video, GraduationCap} from 'lucide-react';
 import {toast} from 'sonner';
-
 import useAuthStore from '@/store/auth/authStore';
-import {useNavigate} from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import {AxiosError} from "axios";
 
 export default function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const from = location.state?.from?.pathname || "/";
+
     const {login, loadMe} = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string[]>([]);
@@ -36,7 +38,7 @@ export default function Login() {
             await loadMe();
 
             toast.success('Đăng nhập thành công!');
-            navigate('/', {replace: true});
+            navigate(from, {replace: true});
         } catch (err) {
             if(err instanceof AxiosError) {
                 toast.error('Có lỗi đã xảy ra: ', err.response?.data);

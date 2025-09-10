@@ -11,20 +11,23 @@ const useAuthStore = create<AuthState>()(
 	persist(
 		(set, get) => ({
 			user: null,
+			userRoles: [],
 			loading: false,
 			error: null,
-			isLoadingMe: false,
+			_hydrated: false,
+			setHydrated: (v: boolean) => set({ _hydrated: v }),
+			meStatus: 'idle',
 
 			login: async (payload: LoginPayload) => {
 				set({ loading: true, error: null });
 				try {
 					const res = await apiLogin(payload);
 					// http đã unwrap -> res.data là payload thật
-					const { accessToken, refreshToken, user } = (res.data ||
-						{}) as any;
+					const { accessToken, user } = (res.data ||
+						{});
 					if (!accessToken) throw new Error('No access token');
-					setTokens({ accessToken, refreshToken });
-					set({ user: user ?? null, loading: false });
+					setTokens({ accessToken });
+					set({ user: user ?? null, userRoles: [user.role] , loading: false });
 				} catch (e: any) {
 					set({
 						error:
@@ -40,22 +43,33 @@ const useAuthStore = create<AuthState>()(
 			logout: () => {
 				clearTokens();
 				set({ user: null });
-				window.location.href = '/login';
+				window.location.href = '/';
 			},
 
 			loadMe: async () => {
-				set({ isLoadingMe: true });
+				set({ meStatus: 'loading' });
 				try {
 					const res = await apiLoadMe();
-					set({ user: res.data.user, isLoadingMe: false });
-				} catch {
+					set({ user: res.data.user, meStatus: 'success' });
+				} catch(e) {
 					// token hỏng/expired -> để interceptor xử lý
+					set({ meStatus: 'error' });
+					throw e;
 				}
+			},
+
+			loadMeOnce: () => {
+				const { meStatus } = get();
+				if (meStatus === 'idle' || meStatus === 'error') void get().loadMe();
 			},
 		}),
 		{
 			name: 'auth', // key trong localStorage
 			storage: createJSONStorage(() => localStorage),
+			onRehydrateStorage: () => (state) => {
+				// chạy sau khi rehydrate xong
+				state?.setHydrated(true);
+			},
 			// chỉ persist field user (không persist loading/error)
 			partialize: (s) => ({ user: s.user }),
 		}
