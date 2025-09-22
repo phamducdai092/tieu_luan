@@ -24,9 +24,9 @@ public class ChatMessage {
     @JoinColumn(name = "sender_id")
     private Users sender;
 
-    @ManyToOne
-    @JoinColumn(name = "study_group_id")
-    private StudyGroups studyGroup;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "group_id")
+    private StudyGroups group;
 
     private LocalDateTime sentAt;
 }
