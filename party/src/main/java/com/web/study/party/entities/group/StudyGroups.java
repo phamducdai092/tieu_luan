@@ -1,8 +1,12 @@
 package com.web.study.party.entities.group;
 
 import com.web.study.party.entities.ChatMessage;
+import com.web.study.party.entities.enums.GroupTopic;
+import com.web.study.party.entities.enums.JoinPolicy;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.Instant;
 import java.util.List;
 
 @Entity
@@ -17,19 +21,28 @@ public class StudyGroups {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private Long ownerId;
 
-    private String groupName;
-
+    @Column(nullable = false, length = 60)
+    private String name;
+    @Column(nullable = false, unique = true, length = 80)
+    private String slug;
+    @Column(length = 500)
     private String description;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "topic_id")
-    private Topics topic;
+    @Enumerated(EnumType.STRING)
+    private GroupTopic topic;
+    private String topicColor;
 
-    @OneToMany(mappedBy = "studyGroup", cascade = CascadeType.ALL)
-    private List<UserStudyGroup> members;
+    private Integer maxMembers = 100;
 
-    @OneToMany(mappedBy = "studyGroup", cascade = CascadeType.ALL)
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    JoinPolicy joinPolicy = JoinPolicy.OPEN;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.ALL)
     private List<ChatMessage> messages;
 }
 
