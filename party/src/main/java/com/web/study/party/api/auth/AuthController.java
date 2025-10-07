@@ -33,7 +33,7 @@ public class AuthController {
                 .code("SUCCESS")
                 .data(authResponse)
                 .path(httpRequest.getRequestURI())
-                .message("Đã đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.")
+                .message("Đã đăng ký thành công. Vui lòng kiểm tra email để nhận mã xác thực tài khoản.")
                 .build();
 
         return ResponseEntity.ok(response);
