@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
         var body = ApiError.<Void>builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .code("FORBIDDEN")
-                .message("Access denied")
+                .message(ex.getMessage())
                 .path(req.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
         var body = ApiError.<Void>builder()
                 .status(HttpStatus.METHOD_NOT_ALLOWED.value())
                 .code("METHOD_NOT_ALLOWED")
-                .message("Method not allowed")
+                .message("Method not allowed, " + ex.getMessage() + " " + ex.getMethod())
                 .path(req.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(body);

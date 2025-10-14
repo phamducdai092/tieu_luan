@@ -29,7 +29,8 @@ public class EnumMetaController {
         if (names == null || names.isEmpty()) {
             // mặc định trả vài enum “phổ biến”
             data = enumService.getByNames(List.of(
-                    "GroupTopic", "AccountStatus", "MemberRole", "MemberState", "JoinPolicy", "Role"
+                    "GroupPrivacy", "GroupTopic", "JoinPolicy", "MemberRole",  "MemberState", "RequestStatus", // group related
+                    "AccountStatus", "Role" // account related
             ));
             response = ApiResponse.<List<EnumGroupDTO>>builder()
                     .status(CodeStatus.SUCCESS.getHttpCode())

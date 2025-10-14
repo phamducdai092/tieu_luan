@@ -12,8 +12,12 @@ import com.web.study.party.utils.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.WebUtils;
 
 @RestController
 @RequestMapping("/auth")
@@ -23,6 +27,9 @@ public class AuthController {
     private final AuthService authService;
     private final JwtProperties jwtProps;
     private AuthResponse authResponse;
+
+    @Value("${security.jwt.refresh-cookie-name:refresh_token}")
+    private String refreshCookieName;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest req, HttpServletRequest httpRequest) {
@@ -63,32 +70,62 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(@CookieValue(name = "${security.jwt.refresh-cookie-name:refresh_token}", required = false) String refreshCookie,
-                                                                   HttpServletRequest httpRequest) {
+    public ResponseEntity<ApiResponse<TokenResponse>> refreshToken(HttpServletRequest httpRequest) {
 
-        if (refreshCookie == null || refreshCookie.isBlank()) {
-            // 401 để FE biết cần login lại
-            return ResponseEntity.status(401).build();
+        var cookie = WebUtils.getCookie(httpRequest, refreshCookieName);
+        if (cookie == null || cookie.getValue() == null || cookie.getValue().isBlank()) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.<TokenResponse>builder()
+                            .status(401)
+                            .code("UNAUTHORIZED")
+                            .path(httpRequest.getRequestURI())
+                            .message("Missing refresh token")
+                            .build());
+        }
+
+        String refresh = cookie.getValue().trim();
+
+        // JWT phải có đúng 2 dấu '.'
+        long dotCount = refresh.chars().filter(ch -> ch == '.').count();
+        if (dotCount != 2) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.<TokenResponse>builder()
+                            .status(401)
+                            .code("UNAUTHORIZED")
+                            .path(httpRequest.getRequestURI())
+                            .message("Invalid refresh token format")
+                            .build());
         }
 
         String ip = httpRequest.getRemoteAddr();
         String ua = httpRequest.getHeader("User-Agent");
 
-        var pair = authService.refresh(refreshCookie, ip, ua);
-        var cookie = CookieUtils.buildRefreshCookie(jwtProps, pair.refreshToken(), pair.refreshTtlSeconds());
+        try {
+            var pair = authService.refresh(refresh, ip, ua);
 
-        TokenResponse tokenResponse = new TokenResponse(pair.accessToken());
+            ResponseCookie newCookie = CookieUtils.buildRefreshCookie(jwtProps, pair.refreshToken(), pair.refreshTtlSeconds());
 
-        ApiResponse<TokenResponse> response = ApiResponse.<TokenResponse>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .path(httpRequest.getRequestURI())
-                .data(tokenResponse)
-                .message("Làm mới token thành công")
-                .build();
-        return ResponseEntity.ok()
-                .header("Set-Cookie", cookie.toString())
-                .body(response);
+            var body = ApiResponse.<TokenResponse>builder()
+                    .status(CodeStatus.SUCCESS.getHttpCode())
+                    .code("SUCCESS")
+                    .path(httpRequest.getRequestURI())
+                    .data(new TokenResponse(pair.accessToken()))
+                    .message("Làm mới token thành công")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, newCookie.toString())
+                    .body(body);
+
+        } catch (Exception ex) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.<TokenResponse>builder()
+                            .status(401)
+                            .code("UNAUTHORIZED")
+                            .path(httpRequest.getRequestURI())
+                            .message("Invalid or expired refresh token")
+                            .build());
+        }
     }
 
     @PostMapping("/logout")
