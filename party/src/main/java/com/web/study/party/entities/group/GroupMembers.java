@@ -1,5 +1,6 @@
 package com.web.study.party.entities.group;
 
+import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.group.MemberRole;
 import com.web.study.party.entities.enums.group.MemberState;
 import jakarta.persistence.*;
@@ -19,11 +20,18 @@ public class GroupMembers {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long groupId;
-    private Long userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private StudyGroups group;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private Users user;
 
     @Enumerated(EnumType.STRING)
     MemberRole role = MemberRole.MEMBER;
+
     @Enumerated(EnumType.STRING)
     MemberState state = MemberState.APPROVED;
 

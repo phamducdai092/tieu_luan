@@ -1,6 +1,7 @@
 package com.web.study.party.entities.group;
 
 import com.web.study.party.entities.ChatMessage;
+import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.group.GroupPrivacy;
 import com.web.study.party.entities.enums.group.GroupTopic;
 import com.web.study.party.entities.enums.group.JoinPolicy;
@@ -22,7 +23,10 @@ public class StudyGroups {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long ownerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private Users owner;
 
     @Column(nullable = false, length = 60)
     private String name;

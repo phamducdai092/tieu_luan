@@ -41,29 +41,32 @@ export function UserInfoDialog({
                                    user,
                                    children,
                                }: {
-    user: User;
+    user?: User | null;
     children?: React.ReactNode;
 }) {
     const [open, setOpen] = React.useState(false);
     const [saving, setSaving] = React.useState(false);
     const {setUser} = useAuthStore();
 
+    const u: Partial<User> = user ?? {};
+
     // local form state
-    const [displayName, setDisplayName] = useState(user.displayName ?? "");
-    const [bio, setBio] = useState(user.bio ?? "");
-    const [phone, setPhone] = useState(user.phoneNumber ?? "");
-    const [dob, setDob] = useState(toDateInput(user.dateOfBirth)); // yyyy-MM-dd
+    const [displayName, setDisplayName] = useState(user?.displayName ?? "");
+    const [bio, setBio] = useState(user?.bio ?? "");
+    const [phone, setPhone] = useState(user?.phoneNumber ?? "");
+    const [dob, setDob] = useState(toDateInput(u.dateOfBirth ?? ""));// yyyy-MM-dd
 
     // image states
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [bannerFile, setBannerFile] = useState<File | null>(null);
+
     const avatarPreview = useMemo(
-        () => (avatarFile ? URL.createObjectURL(avatarFile) : user.avatarUrl || undefined),
-        [avatarFile, user.avatarUrl]
+        () => (avatarFile ? URL.createObjectURL(avatarFile) : u.avatarUrl || undefined),
+        [avatarFile, u?.avatarUrl]
     );
     const bannerPreview = useMemo(
-        () => (bannerFile ? URL.createObjectURL(bannerFile) : user.bannerUrl || undefined),
-        [bannerFile, user.bannerUrl]
+        () => (bannerFile ? URL.createObjectURL(bannerFile) : u.bannerUrl || undefined),
+        [bannerFile, u?.bannerUrl]
     );
 
     const avatarInputRef = React.useRef<HTMLInputElement>(null);
@@ -85,8 +88,8 @@ export function UserInfoDialog({
 
             // Build payload (chỉ field có giá trị)
             const payload: UserInformationUpdatePayload = {
-                avatarUrl: avatarRes?.secure_url ?? user.avatarUrl ?? undefined,
-                bannerUrl: bannerRes?.secure_url ?? user.bannerUrl ?? undefined,
+                avatarUrl: avatarRes?.secure_url ?? u?.avatarUrl ?? undefined,
+                bannerUrl: bannerRes?.secure_url ?? u?.bannerUrl ?? undefined,
                 displayName: displayName?.trim() || undefined,
                 bio: bio?.trim() || undefined,
                 phoneNumber: phone?.trim() || undefined,
@@ -116,19 +119,15 @@ export function UserInfoDialog({
         if (bannerFile && bannerPreview) URL.revokeObjectURL(bannerPreview);
     }
 
-    const age = calcAge(user.dateOfBirth);
+    const age = u?.dateOfBirth ? calcAge(u.dateOfBirth) : null;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             {children ? (
-                <DialogTrigger asChild onClick={() => setOpen(true)}>
-                    {children}
-                </DialogTrigger>
+                <DialogTrigger asChild onClick={() => setOpen(true)}>{children}</DialogTrigger>
             ) : (
                 <DialogTrigger asChild>
-                    <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80">
-                        Thông tin
-                    </Button>
+                    <Button size="sm" className="bg-gradient-to-r from-primary to-primary/80">Thông tin</Button>
                 </DialogTrigger>
             )}
 
@@ -193,8 +192,8 @@ export function UserInfoDialog({
                                         >
                                             <AvatarDisplay
                                                 src={avatarPreview}
-                                                fallback={user.displayName}
-                                                alt={user.displayName}
+                                                fallback={u.displayName}
+                                                alt={u.displayName}
                                                 size={160}
                                             />
                                         </div>
@@ -221,9 +220,9 @@ export function UserInfoDialog({
                                 <div className="flex-1 min-w-0 pb-1">
                                     <div className="flex flex-wrap items-center gap-2 mb-2">
                                         <h2 className="text-2xl md:text-3xl font-bold truncate">
-                                            {user.displayName || "Chưa đặt tên"}
+                                            {u.displayName || "Chưa đặt tên"}
                                         </h2>
-                                        {user.verified ? (
+                                        {u.verified ? (
                                             <Badge className="bg-success/10 text-success border-success/20 gap-1">
                                                 <ShieldCheck className="h-3 w-3"/> Đã xác minh
                                             </Badge>
@@ -237,22 +236,22 @@ export function UserInfoDialog({
                                         )}
                                     </div>
                                     <p className="text-sm text-muted-foreground mb-3">
-                                        {user.bio || "Chưa có bio"}
+                                        {u.bio || "Chưa có bio"}
                                     </p>
 
                                     <div className="flex flex-wrap gap-2 text-sm">
                                         <Badge variant="secondary" className="gap-1">
-                                            <Mail className="h-3 w-3"/> {user.email}
+                                            <Mail className="h-3 w-3"/> {u.email}
                                         </Badge>
-                                        {user.phoneNumber && (
+                                        {u.phoneNumber && (
                                             <Badge variant="secondary" className="gap-1">
-                                                <Phone className="h-3 w-3"/> {user.phoneNumber}
+                                                <Phone className="h-3 w-3"/> {u.phoneNumber}
                                             </Badge>
                                         )}
-                                        {user.dateOfBirth && (
+                                        {u.dateOfBirth && (
                                             <Badge variant="secondary" className="gap-1">
                                                 <CalendarIcon className="h-3 w-3"/>{" "}
-                                                {new Date(user.dateOfBirth).toLocaleDateString()}
+                                                {new Date(u.dateOfBirth).toLocaleDateString()}
                                             </Badge>
                                         )}
                                     </div>
@@ -313,7 +312,7 @@ export function UserInfoDialog({
                                         <CardContent className="p-4 space-y-4">
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Mail className="h-4 w-4 flex-shrink-0"/>
-                                                <span className="truncate">{user.email}</span>
+                                                <span className="truncate">{u.email}</span>
                                             </div>
                                             <div className="text-xs text-muted-foreground">
                                                 Email là định danh chính và không thể đổi.
@@ -322,12 +321,12 @@ export function UserInfoDialog({
                                             <div className="grid grid-cols-1 gap-3 text-xs">
                                                 <InfoPill
                                                     label="Trạng thái"
-                                                    value={user.verified ? "Đã xác minh" : "Chưa xác minh"}
-                                                    tone={user.verified ? "success" : "secondary"}
+                                                    value={u.verified ? "Đã xác minh" : "Chưa xác minh"}
+                                                    tone={u.verified ? "success" : "secondary"}
                                                 />
                                                 <InfoPill
                                                     label="SĐT"
-                                                    value={user.phoneNumber || "Chưa cập nhật"}
+                                                    value={u.phoneNumber || "Chưa cập nhật"}
                                                 />
                                                 <InfoPill
                                                     label="Sinh nhật"

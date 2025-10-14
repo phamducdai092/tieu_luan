@@ -1,15 +1,11 @@
 import {create} from "zustand";
-import type {Room, RoomState} from "@/types/group.type.ts";
+import type {RoomState} from "@/types/group.type.ts";
 
-export const useGroupStore = create<RoomState>(() => ({
+export const useGroupStore = create<RoomState>((set) => ({
         userRoomsJoined: [],
         userRoomsOwned: [],
 
-        setRoomsUserJoined: (rooms: Room[]) => {
-            useGroupStore.setState({userRoomsJoined: rooms});
-        },
-        setRoomUserOwned: (rooms: Room[]) => {
-            useGroupStore.setState({userRoomsOwned: rooms})
-        }
+        setRoomsUserJoined: (rooms) => set({ userRoomsJoined: rooms ?? [] }),
+        setRoomsUserOwned:  (rooms) => set({ userRoomsOwned:  rooms ?? [] }),
     })
 );

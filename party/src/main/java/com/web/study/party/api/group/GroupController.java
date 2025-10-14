@@ -7,7 +7,6 @@ import com.web.study.party.dto.response.group.GroupCardResponse;
 import com.web.study.party.dto.response.group.GroupResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
-import com.web.study.party.entities.enums.group.MemberRole;
 import com.web.study.party.services.group.GroupServiceImp;
 import com.web.study.party.utils.Paging;
 import com.web.study.party.utils.ResponseUtil;
@@ -29,8 +28,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GroupController {
 
-    private final GroupServiceImp service;
+    private final GroupServiceImp groupService;
 
+    @PostMapping
+    public ResponseEntity<ApiResponse<GroupResponse>> create(@AuthenticationPrincipal(expression = "user") Users user, @Valid @RequestBody GroupCreateRequest req, HttpServletRequest httpRequest) {
+        GroupResponse group = groupService.create(user.getId(), req);
+        ApiResponse<GroupResponse> response = ApiResponse.<GroupResponse>builder()
+                .status(CodeStatus.SUCCESS.getHttpCode())
+                .code("SUCCESS")
+                .data(group)
+                .message("Group created successfully")
+                .path(httpRequest.getRequestURI())
+                .build();
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/joined")
     public ResponseEntity<ApiResponse<List<GroupCardResponse>>> getJoinedGroups(
@@ -43,7 +54,7 @@ public class GroupController {
             HttpServletRequest req
     ) {
         Pageable pageable = Paging.parsePageable(page, size, sort);
-        var result = service.getJoinedGroups(user.getId(), pageable);
+        var result = groupService.getJoinedGroups(user.getId(), pageable);
 
         return filterPageable(topic, keyword, req, result);
     }
@@ -60,27 +71,14 @@ public class GroupController {
     ) {
         Pageable pageable = Paging.parsePageable(page, size, sort);
 
-        var result = service.getOwnedGroups(user.getId(), pageable);
+        var result = groupService.getOwnedGroups(user.getId(), pageable);
 
         return filterPageable(topic, keyword, req, result);
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<GroupResponse>> create(@AuthenticationPrincipal(expression = "user") Users user, @Valid @RequestBody GroupCreateRequest req, HttpServletRequest httpRequest) {
-        GroupResponse group = service.create(user.getId(), req);
-        ApiResponse<GroupResponse> response = ApiResponse.<GroupResponse>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(group)
-                .message("Group created successfully")
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
     @PutMapping("/{gid}")
     public ResponseEntity<ApiResponse<GroupResponse>> update(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, @Valid @RequestBody GroupCreateRequest req, HttpServletRequest httpRequest) {
-        GroupResponse group = service.update(user.getId(), gid, req);
+        GroupResponse group = groupService.update(user.getId(), gid, req);
         ApiResponse<GroupResponse> response = ApiResponse.<GroupResponse>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .code("SUCCESS")
@@ -91,64 +89,9 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{gid}/join")
-    public ResponseEntity<ApiResponse<Void>> joinGroup(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, HttpServletRequest httpRequest) {
-
-        String rs = service.join(user.getId(), gid);
-
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(null)
-                .message(rs)
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-
-    }
-
-    @PostMapping("/{gid}/leave")
-    public ResponseEntity<ApiResponse<Void>> leaveGroup(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, HttpServletRequest httpRequest) {
-        service.leave(user.getId(), gid);
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(null)
-                .message("Left group successfully")
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{gid}/approve/{userId}")
-    public ResponseEntity<ApiResponse<Void>> approveMember(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, @PathVariable Long userId, HttpServletRequest httpRequest) {
-        service.approve(user.getId(), gid, userId);
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(null)
-                .message("Member approved successfully")
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{gid}/kick/{userId}")
-    public ResponseEntity<ApiResponse<Void>> kickMember(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, @PathVariable Long userId, HttpServletRequest httpRequest) {
-        service.kick(user.getId(), gid, userId);
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(null)
-                .message("Member kicked successfully")
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
     @DeleteMapping("/{gid}")
     public ResponseEntity<ApiResponse<Void>> deleteGroup(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, HttpServletRequest httpRequest) {
-        service.delete(user.getId(), gid);
+        groupService.delete(user.getId(), gid);
         ApiResponse<Void> response = ApiResponse.<Void>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .code("SUCCESS")
@@ -158,33 +101,6 @@ public class GroupController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
-    @PutMapping("/{gid}/role/{userId}")
-    public ResponseEntity<ApiResponse<Void>> setMemberRole(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, @PathVariable Long userId, @RequestParam String role, HttpServletRequest httpRequest) {
-        service.setRole(user.getId(), gid, userId, Enum.valueOf(MemberRole.class, role));
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(null)
-                .message("Member role updated successfully")
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{gid}/transfer/{newOwnerId}")
-    public ResponseEntity<ApiResponse<Void>> transferOwnership(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, @PathVariable Long newOwnerId, HttpServletRequest httpRequest) {
-        service.transferOwnership(user.getId(), gid, newOwnerId);
-        ApiResponse<Void> response = ApiResponse.<Void>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .code("SUCCESS")
-                .data(null)
-                .message("Group ownership transferred successfully")
-                .path(httpRequest.getRequestURI())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
 
     private ResponseEntity<ApiResponse<List<GroupCardResponse>>> filterPageable(@RequestParam(required = false) String topic, @RequestParam(required = false) String keyword, HttpServletRequest req, Page<GroupCardResponse> result) {
         Map<String, Object> filters = new LinkedHashMap<>();

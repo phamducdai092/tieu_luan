@@ -20,16 +20,4 @@ public interface GroupService {
     Page<GroupCardResponse> getOwnedGroups(Long userId, Pageable pageable);
 
     void delete(Long uid, Long gid);
-
-
-    // actions
-    String joinCode(Long uid, Long gid);
-    String join(Long uid, Long gid);
-    void requestToJoin(Long uid, Long gid);
-    void leave(Long uid, Long gid);
-    void approve(Long modId, Long gid, Long userId);
-    void kick(Long modId, Long gid, Long userId);
-    void setRole(Long ownerId, Long gid, Long userId, MemberRole role);
-    void transferOwnership(Long ownerId, Long gid, Long newOwnerId);
-
 }
