@@ -15,3 +15,10 @@ export async function runBootstrap() {
         getAccess() ? bootstrapGroups() : Promise.resolve(),
     ]);
 }
+
+export async function reBootstrapGroups() {
+    await Promise.all([
+        // chỉ load group khi đã có access token
+        getAccess() ? bootstrapGroups() : Promise.resolve(),
+    ]);
+}

@@ -8,6 +8,7 @@ import React, {useEffect, useRef} from "react";
 import ScrollToTop from "@/components/common/ScrollToTop";
 import BackToTop from "@/components/common/BackToTop";
 import {runBootstrap} from "@/bootstrap/bootstrap.ts";
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 
 function AppRoutes() {
     return useRoutes(routes);
@@ -21,6 +22,7 @@ function AppGate({children}: { children: React.ReactNode }) {
 
 export default function App() {
     const didInit = useRef(false);
+    const queryClient = new QueryClient();
 
     useEffect(() => {
         if (didInit.current) return;
@@ -35,12 +37,14 @@ export default function App() {
     return (
         <BrowserRouter>
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-                <AppGate>
-                    <ScrollToTop/>
-                    <AppRoutes/>
-                    <Toaster/>
-                    <BackToTop/>
-                </AppGate>
+                <QueryClientProvider client={queryClient}>
+                    <AppGate>
+                        <ScrollToTop/>
+                        <AppRoutes/>
+                        <Toaster/>
+                        <BackToTop/>
+                    </AppGate>
+                </QueryClientProvider>
             </ThemeProvider>
         </BrowserRouter>
     );

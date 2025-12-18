@@ -4,12 +4,13 @@ import {cn} from "@/lib/utils";
 import type {EnumItem} from "@/types/enum.type.ts";
 
 type Props = {
-    enumItem?: EnumItem;
-    fallback?: string; // nếu không có enumItem thì hiển thị slug/topic code
+    enumItem?: EnumItem | null;
+    fallback?: string;
 };
 
 
 export function TopicBadge({enumItem, fallback}: Props) {
+
     if (!enumItem) {
         return (
             <Badge variant="secondary" className="text-xs px-2 py-0.5">
@@ -26,7 +27,8 @@ export function TopicBadge({enumItem, fallback}: Props) {
             variant="secondary"
             className={cn("flex items-center gap-1 text-xs px-2 py-0.5", colorClass)}
         >
-            {Icon && <Icon className="w-3 h-3"/>}
+            {/*{Icon && <Icon className={`w-${size} h-${size}`}/>}*/}
+            {Icon && <Icon className="w-4 h-4"/>}
             {enumItem.label}
         </Badge>
     );

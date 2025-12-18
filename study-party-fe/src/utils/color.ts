@@ -94,8 +94,21 @@ export const topicIconMap = {
     Star: L.Star,
     Scissors: L.Scissors,
     Trophy: L.Trophy,
+    LockOpen: L.LockOpen,
+    Lock: L.Lock,
+    DoorOpen: L.DoorOpen,
+    MailQuestion: L.MailQuestion,
+    UserPlus2: L.UserPlus2,
     FootballCustom: FootballIcon,
     MoreHorizontal: L.MoreHorizontal,
+    Clock: L.Clock,
+    CheckCircle2: L.CheckCircle2,
+    CircleX: L.CircleX,
+    Ban: L.Ban,
+    Hourglass: L.Hourglass,
+    Crown: L.Crown,
+    Shield: L.Shield,
+    UserCircle: L.UserCircle,
 } as const;
 
 export type IconKey = keyof typeof topicIconMap;

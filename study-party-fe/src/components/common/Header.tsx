@@ -1,7 +1,7 @@
 import {Link, useNavigate} from "react-router-dom";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
-import {ModeToggle} from "@/components/features/mode-toggle.tsx";
-import {Bell, Plus, Search, Home, User, School, BookOpen, Files, Settings, LogOut, Shield} from "lucide-react";
+import {ToggleMode} from "@/components/features/ToggleMode.tsx";
+import {Bell, Search, Home, User, School, BookOpen, Files, Settings, LogOut, Shield} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -14,6 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import useAuthStore from "@/store/auth.store.ts";
 import AvatarDisplay from "@/components/shared/AvatarDisplay.tsx";
+
+import type {EnumItem} from "@/types/enum.type.ts";
+import {useEnumStore} from "@/store/enum.store.ts";
+import CreateRoomDialog from "@/components/features/group/CreateRoomDialog.tsx";
 
 const NAV_ITEMS = [
     {to: "/", label: "Home", icon: Home},
@@ -29,6 +33,8 @@ export default function Header() {
     const user = useAuthStore((s) => s.user);
     const logout = useAuthStore((s) => s.logout);
 
+    const groupEnum: EnumItem[] = useEnumStore().get("GroupTopic");
+
     const handleLogout = () => {
         try {
             logout?.();
@@ -41,7 +47,7 @@ export default function Header() {
         <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/80 backdrop-blur">
             <div className="mx-auto flex h-full max-w-7xl items-center gap-3 px-4">
                 <SidebarTrigger className="shrink-0"/>
-                <ModeToggle/>
+                <ToggleMode/>
 
                 <div className="relative hidden w-full items-center md:flex">
                     <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground"/>
@@ -53,9 +59,7 @@ export default function Header() {
 
                 {user ? (
                     <div className="ms-auto flex items-center gap-2">
-                        <Button size="sm" className="gap-2" type="button">
-                            <Plus className="h-4 w-4"/> Tạo phòng học
-                        </Button>
+                        <CreateRoomDialog groupTopics={groupEnum}/>
 
                         <Button size="icon" variant="ghost" className="relative" aria-label="Thông báo" type="button">
                             <Bell className="h-5 w-5"/>

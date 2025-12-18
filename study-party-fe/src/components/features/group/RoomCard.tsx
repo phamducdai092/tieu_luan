@@ -1,4 +1,4 @@
-import type {Room} from "@/types/group.type.ts";
+import type {Room} from "@/types/group/group.type.ts";
 import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx";
 import {ChevronRight, Users} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";

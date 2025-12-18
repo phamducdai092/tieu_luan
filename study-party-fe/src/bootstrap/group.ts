@@ -9,6 +9,6 @@ export async function bootstrapGroups() {
     ])
 
     const { setRoomsUserJoined, setRoomsUserOwned } = useGroupStore.getState();
-    setRoomsUserJoined(joined.data ?? []);
-    setRoomsUserOwned(owned.data ?? []);
+    setRoomsUserJoined(joined ?? []);
+    setRoomsUserOwned(owned ?? []);
 }

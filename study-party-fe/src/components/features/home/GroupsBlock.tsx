@@ -3,7 +3,7 @@ import {Badge} from "@/components/ui/badge.tsx"
 import {Button} from "@/components/ui/button.tsx"
 import {Users, Star, Plus} from "lucide-react"
 import RoomCard from "@/components/features/group/RoomCard.tsx"
-import type {Room} from "@/types/group.type.ts"
+import type {Room} from "@/types/group/group.type.ts"
 import type {EnumItem} from "@/types/enum.type.ts"
 import {QuickActions} from "@/components/features/home/QuickActions.tsx";
 

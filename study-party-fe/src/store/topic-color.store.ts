@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { topicToColor } from "@/utils/color.ts";
-import type {TopicColorState} from "@/types/group.type.ts";
+import type {TopicColorState} from "@/types/group/group.type.ts";
 
 export const useTopicColorStore = create<TopicColorState>((set, get) => ({
     map: {},

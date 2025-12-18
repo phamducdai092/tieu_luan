@@ -1,3 +1,5 @@
+import type {PagingResponse} from "@/types/paging.type.ts";
+import type {AxiosResponse} from "axios";
 
 export type FieldError = {
     field?: string;
@@ -12,7 +14,7 @@ export type ApiResponse<T> = {
     code: string;       // ví dụ: "Request was successful"
     message: string;    // ví dụ: "Lấy dữ liệu thành công"
     data: T | null;
-    meta: unknown | null;
+    meta: PagingResponse | null;
 };
 
 export type ApiError = {
@@ -23,3 +25,7 @@ export type ApiError = {
     message: string;
     fieldErrors: FieldError[]
 }
+
+export type UnwrappedResponse<T> = AxiosResponse<T> & {
+    meta?: PagingResponse | null;
+};

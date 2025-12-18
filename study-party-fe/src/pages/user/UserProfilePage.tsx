@@ -12,7 +12,7 @@ import RoomCard from "@/components/features/group/RoomCard.tsx";
 import {UserInfoDialog} from "@/components/features/user/UserProfileDialog.tsx";
 import AvatarDisplay from "@/components/shared/AvatarDisplay.tsx";
 import {useNavigate} from "react-router-dom";
-import type {Room} from "@/types/group.type.ts";
+import type {Room} from "@/types/group/group.type.ts";
 import {useGroupStore} from "@/store/group.store.ts";
 import type {EnumItem} from "@/types/enum.type.ts";
 import {useEnumStore} from "@/store/enum.store.ts";

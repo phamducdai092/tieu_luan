@@ -14,5 +14,6 @@ export const getEnumsByNames = async (names?: string[]) => {
 // Hoặc lấy mặc định tất cả (BE tự quyết)
 export const getAllEnums = async () => {
     const res = await http.get<ApiResponse<EnumGroup[]>>("enums");
+    // const api = pickApiPayload<EnumGroup[]>(res);
     return res.data;
 };

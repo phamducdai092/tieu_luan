@@ -5,3 +5,12 @@ export type PagingPayload = {
     topic?: string;
     keyword?: string;
 }
+
+export type PagingResponse = {
+    page: number;
+    size: number;
+    totalItems: number;
+    totalPages: number;
+    sort: string;
+    filter: string;
+}

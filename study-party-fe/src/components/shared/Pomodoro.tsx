@@ -20,8 +20,7 @@ export default function Pomodoro({
                                      size = "xl",
                                      className,
                                      defaultBg =
-                                         // Unsplash: Window + rain bokeh, tone xám dịu
-                                         "https://images.unsplash.com/photo-1505492537188-de7f728b6b02",
+                                         "https://images.unsplash.com/vector-1752947542367-bb88db918ba8?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHN0dWR5fGVufDB8MHwwfHx8Mg%3D%3D&auto=format&fit=crop&q=60&w=500",
                                  }: {
     title?: string
     size?: "md" | "lg" | "xl"
@@ -124,15 +123,6 @@ export default function Pomodoro({
                         filter: effectiveBg ? "saturate(0.85) contrast(0.98)" : undefined,
                     }}
                 />
-                {/* Soften & glass overlays */}
-                {/*<div*/}
-                {/*    className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-background/75 via-background/65 to-background/80"/>*/}
-                {/*<div className="pointer-events-none absolute inset-0 z-10 backdrop-blur-[2px]"/>*/}
-                {/*<div*/}
-                {/*    className="pointer-events-none absolute inset-0 z-10 opacity-[0.06]"*/}
-                {/*    style={{backgroundImage: "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"140\" height=\"140\" viewBox=\"0 0 40 40\"><g fill=\"%23000\" fill-opacity=\"0.5\"><circle cx=\"1\" cy=\"1\" r=\"1\"/></g></svg>')"}}*/}
-                {/*/>*/}
-
                 <CardHeader className="pb-2 relative z-20">
                     <div className="flex items-center justify-between gap-3">
                         <CardTitle className="flex items-center gap-2 text-foreground/90">
@@ -163,7 +153,7 @@ export default function Pomodoro({
                     <div className="h-full flex flex-col items-center justify-between gap-8 md:gap-9">
                         {/* Time big & chill */}
                         <div
-                            className="text-6xl md:text-7xl lg:text-8xl font-bold tabular-nums tracking-tight drop-shadow-sm">
+                            className="bg-background p-4 rounded-xl md:text-7xl lg:text-8xl font-bold tabular-nums tracking-tight drop-shadow-sm">
                             {pomo.leftLabel}
                         </div>
 

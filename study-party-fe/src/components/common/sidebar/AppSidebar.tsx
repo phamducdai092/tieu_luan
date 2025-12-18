@@ -56,8 +56,8 @@ const data = {
             match: "/settings/*",
             items: [
                 {
-                    title: "General",
-                    url: "#",
+                    title: "Thông báo",
+                    url: "/settings/notifications",
                 },
                 {
                     title: "Team",

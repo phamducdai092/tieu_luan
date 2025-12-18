@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom"
 import {useEnumStore} from "@/store/enum.store.ts"
 import useAuthStore from "@/store/auth.store.ts"
 import {useGroupStore} from "@/store/group.store.ts"
-import type {Room} from "@/types/group.type.ts"
+import type {Room} from "@/types/group/group.type.ts"
 import type {EnumItem} from "@/types/enum.type.ts"
 import {getEnumItem} from "@/utils/enumItemExtract.ts"
 
@@ -77,7 +77,6 @@ export default function HomePage() {
                     }}/>
                     <StreakCard streakDays={7} goalDays={30}/>
                 </div>
-
 
                 {/* Quick Stats */}
                 <QuickStats stats={stats}/>

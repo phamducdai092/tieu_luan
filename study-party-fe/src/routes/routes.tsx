@@ -11,7 +11,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import PrivateRoute from "@/routes/PrivateRoute";
 import AdminRoute from "@/routes/AdminRoute";
 import NotFound from "@/pages/status/NotFound";
-import RoomDetail from "@/components/features/group/RoomDetail.tsx";
+import RoomDetail from "@/pages/group/RoomDetail.tsx";
 import RoomPage from "@/pages/group/RoomPage.tsx";
 import {FlashcardsPage} from "@/pages/flashcard/FlashCardsPage.tsx";
 import {DocumentsPage} from "@/pages/document/DocumentsPage.tsx";
@@ -40,7 +40,7 @@ export const routes: RouteObject[] = [
                 children: [
                     {path: "me", element: <UserProfilePage/>},
                     {path: "rooms", element: <RoomPage/>},
-                    {path: "rooms/:id", element: <RoomDetail/>},
+                    {path: "rooms/:slug", element: <RoomDetail/>},
                     {path: "flashcard", element: <FlashcardsPage/>},
                     {path: "docs", element: <DocumentsPage/>},
                     {

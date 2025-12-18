@@ -2,14 +2,15 @@ import {useNavigate} from "react-router-dom";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Separator} from "@/components/ui/separator";
-import {Star, Search, Globe2, Plus, LaptopMinimalCheck} from "lucide-react";
-import type {Room} from "@/types/group.type.ts";
+import {Star, Search, Globe2, LaptopMinimalCheck} from "lucide-react";
+import type {Room} from "@/types/group/group.type.ts";
 import RoomCard from "@/components/features/group/RoomCard.tsx";
 import Pomodoro from "@/components/shared/Pomodoro.tsx";
 import {useGroupStore} from "@/store/group.store.ts";
 import {useEnumStore} from "@/store/enum.store.ts";
 import type {EnumItem} from "@/types/enum.type.ts";
 import {getEnumItem} from "@/utils/enumItemExtract.ts";
+import CreateRoomDialog from "@/components/features/group/CreateRoomDialog.tsx";
 
 export default function RoomPage() {
     const nav = useNavigate();
@@ -28,9 +29,10 @@ export default function RoomPage() {
                         <p className="text-sm text-muted-foreground">Quản lý Pomodoro cá nhân & tham gia phòng học</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" className="gap-2"><Plus className="h-4 w-4"/>Tạo phòng nhanh</Button>
+                        <CreateRoomDialog groupTopics={groupEnum}/>
                         <Button className="gap-2"><Globe2 className="h-4 w-4"/>Khám phá</Button>
                     </div>
+
                 </div>
 
                 {/* Pomodoro cá nhân */}

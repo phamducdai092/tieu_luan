@@ -1,4 +1,4 @@
-import type {Room} from "@/types/group.type.ts";
+import type {Room} from "@/types/group/group.type.ts";
 import type {Achievement} from "@/types/achivement.type.ts";
 import type {FlashcardSet} from "@/types/flashcard.type.ts";
 import type {SharedFile} from "@/types/file.type.ts";
@@ -17,6 +17,12 @@ export type User = {
     dateOfBirth?: string;
     role: 'USER' | 'ADMIN';
 };
+
+export type UserBrief = {
+    id: number;
+    avatarUrl?: string;
+    displayName?: string | "Chưa đặt tên";
+}
 
 export type UserInformationUpdatePayload = {
     avatarUrl?: string;

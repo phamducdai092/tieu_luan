@@ -1,3 +1,6 @@
+import type {UserBrief} from "@/types/user.type.ts";
+import type {MemberRole} from "@/types/enum/group.enum.ts";
+
 export type RoomState = {
     userRoomsJoined: Room[];
     userRoomsOwned: Room[];
@@ -9,11 +12,30 @@ export type Room = {
     id: string;
     name: string;
     slug: string;
+    description: string;
     topic: string;
     topicColor: string;
     maxMembers: number;
     memberCount: number;
+    ownerId: number;
+    createdAt: string;
 };
+
+
+export type RoomDetail = {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+    topic: string;
+    topicColor: string;
+    maxMembers: number;
+    memberCount: number;
+    groupPrivacy: string;
+    joinPolicy: string
+    owner: UserBrief;
+    currentUserRole: MemberRole;
+}
 
 export type RoomCreatePayload = {
     name: string;
