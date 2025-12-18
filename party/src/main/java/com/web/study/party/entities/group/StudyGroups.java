@@ -1,6 +1,7 @@
 package com.web.study.party.entities.group;
 
-import com.web.study.party.entities.ChatMessage;
+import com.web.study.party.entities.message.GroupMessages;
+import com.web.study.party.entities.message.PrivateMessage;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.group.GroupPrivacy;
 import com.web.study.party.entities.enums.group.GroupTopic;
@@ -51,6 +52,6 @@ public class StudyGroups {
     GroupPrivacy groupPrivacy = GroupPrivacy.PUBLIC;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.ALL)
-    private List<ChatMessage> messages;
+    private List<GroupMessages> messages;
 }
 

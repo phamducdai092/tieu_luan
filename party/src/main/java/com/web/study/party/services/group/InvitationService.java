@@ -2,10 +2,11 @@ package com.web.study.party.services.group;
 
 import java.util.List;
 import com.web.study.party.dto.response.group.InvitationResponse;
+import com.web.study.party.entities.Users;
 
 public interface InvitationService {
 
-    void createInvitation(Long groupId, Long inviterId, String inviteeEmail);
+    void createInvitation(String slug, Long inviterId, String inviteeEmail);
 
     void acceptInvitation(String token, Long userId);
 
@@ -13,6 +14,8 @@ public interface InvitationService {
 
     void revokeInvitation(Long invitationId, Long ownerId);
 
-    List<InvitationResponse> getPendingInvitationsForGroup(Long groupId, Long ownerId);
+    List<InvitationResponse> getPendingInvitationsForGroup(String slug, Long ownerId);
+
+    List<InvitationResponse> getPendingInvitationsForUser(Users invitee);
 
 }

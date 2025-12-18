@@ -9,9 +9,15 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+
 @Repository
 public interface GroupInviteRepo extends JpaRepository<GroupInvite, Long> {
-  Optional<GroupInvite> findByToken(String token);
-  boolean existsByGroupAndInviteeAndStatus(StudyGroups group, Users invitee, RequestStatus status);
-  List<GroupInvite> findByGroupAndStatus(StudyGroups group, RequestStatus status);
+
+    Optional<GroupInvite> findByToken(String token);
+
+    boolean existsByGroupAndInviteeAndStatus(StudyGroups group, Users invitee, RequestStatus status);
+
+    List<GroupInvite> findByGroupAndStatus(StudyGroups group, RequestStatus status);
+
+    List<GroupInvite> findByInviteeAndStatus(Users invitee, RequestStatus status);
 }

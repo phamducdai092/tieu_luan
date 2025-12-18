@@ -2,8 +2,9 @@ package com.web.study.party.services.group;
 
 import com.web.study.party.dto.request.group.GroupCreateRequest;
 import com.web.study.party.dto.response.group.GroupCardResponse;
+import com.web.study.party.dto.response.group.GroupDetailResponse;
 import com.web.study.party.dto.response.group.GroupResponse;
-import com.web.study.party.entities.enums.group.MemberRole;
+import com.web.study.party.entities.Users;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,10 +15,12 @@ public interface GroupService {
 
     // group
     GroupResponse create(Long uid, GroupCreateRequest req);
-    GroupResponse update(Long uid, Long gid, GroupCreateRequest req);
+    GroupResponse update(Long uid, String slug, GroupCreateRequest req);
 
     Page<GroupCardResponse> getJoinedGroups(Long userId, Pageable pageable);
     Page<GroupCardResponse> getOwnedGroups(Long userId, Pageable pageable);
 
-    void delete(Long uid, Long gid);
+    GroupDetailResponse getDetailBySlug(String slug, Users currentUser);
+
+    void delete(Long uid, String slug);
 }

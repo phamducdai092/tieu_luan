@@ -1,19 +1,16 @@
 package com.web.study.party.api;
 
-// ... imports
-
 import com.web.study.party.dto.response.ApiResponse;
+import com.web.study.party.dto.response.group.InvitationResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
 import com.web.study.party.services.group.InvitationService;
 import lombok.RequiredArgsConstructor;
-import org.apache.kafka.shaded.io.opentelemetry.proto.trace.v1.Status;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/invites")
@@ -21,6 +18,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class InviteController {
 
     private final InvitationService invitationService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<InvitationResponse>>> getUserInvitations(
+            @AuthenticationPrincipal(expression = "user") Users invitee
+    ) {
+        List<InvitationResponse> invitations = invitationService.getPendingInvitationsForUser(invitee);
+        ApiResponse<List<InvitationResponse>> res = ApiResponse.<List<InvitationResponse>>builder()
+                .status(CodeStatus.SUCCESS.getHttpCode())
+                .code(CodeStatus.SUCCESS.getCode())
+                .message("User invitations retrieved successfully")
+                .data(invitations)
+                .build();
+        return ResponseEntity.ok(res);
+    }
 
     // API này cho user đã đăng nhập chấp nhận lời mời
     @PostMapping("/{token}/accept")

@@ -10,14 +10,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 @Repository
 public interface GroupRepo extends JpaRepository<StudyGroups, Long>, JpaSpecificationExecutor<StudyGroups> {
-    Optional<StudyGroups> findBySlug(String slug);
+    Optional<StudyGroups> findStudyGroupsBySlug(String slug);
 
     boolean existsBySlug(String slug);
 
-//    Page<StudyGroups> findBySlug(String slug, Pageable pageable);
+    Page<StudyGroups> findStudyGroupsBySlug(String slug, Pageable pageable);
+    Optional<StudyGroups> findStudyGroupBySlug(String slug);
 
     @Query(value = """
             select

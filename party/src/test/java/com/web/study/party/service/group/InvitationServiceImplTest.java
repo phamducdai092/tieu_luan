@@ -55,7 +55,7 @@ class InvitationServiceImplTest {
         Users inviter = Users.builder().id(inviterId).displayName("Inviter").build();
         Users invitee = Users.builder().id(20L).email(inviteeEmail).build();
         StudyGroups group = StudyGroups.builder().id(groupId).owner(Users.builder().id(1L).build()).name("Test Group").build();
-
+        String slug = group.getSlug();
         // Giả lập quyền của người mời là MOD
         when(groupRepo.findById(groupId)).thenReturn(Optional.of(group));
         when(userRepo.findById(inviterId)).thenReturn(Optional.of(inviter));
@@ -67,7 +67,7 @@ class InvitationServiceImplTest {
         when(groupInviteRepo.existsByGroupAndInviteeAndStatus(group, invitee, RequestStatus.PENDING)).thenReturn(false);
 
         // WHEN
-        invitationService.createInvitation(groupId, inviterId, inviteeEmail);
+        invitationService.createInvitation(slug, inviterId, inviteeEmail);
 
         // THEN
         // Bắt lại đối tượng GroupInvite được truyền vào hàm save

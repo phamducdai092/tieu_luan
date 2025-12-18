@@ -3,10 +3,7 @@ package com.web.study.party.services.enums;
 import com.web.study.party.dto.mapper.enums.EnumGroupDTO;
 import com.web.study.party.dto.mapper.enums.EnumMetaMapper;
 import com.web.study.party.entities.enums.*;
-import com.web.study.party.entities.enums.group.GroupTopic;
-import com.web.study.party.entities.enums.group.JoinPolicy;
-import com.web.study.party.entities.enums.group.MemberRole;
-import com.web.study.party.entities.enums.group.MemberState;
+import com.web.study.party.entities.enums.group.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +13,11 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EnumsServiceImp implements EnumsService {
+
+    @Override
+    public EnumGroupDTO getGroupPrivacy() {
+        return EnumMetaMapper.toGroupDTO(GroupPrivacy.class);
+    }
 
     @Override
     public EnumGroupDTO getGroupTopic() {
@@ -38,6 +40,11 @@ public class EnumsServiceImp implements EnumsService {
     }
 
     @Override
+    public EnumGroupDTO getRequestStatus() {
+        return EnumMetaMapper.toGroupDTO(RequestStatus.class);
+    }
+
+    @Override
     public EnumGroupDTO getJoinPolicy() {
         return EnumMetaMapper.toGroupDTO(JoinPolicy.class);
     }
@@ -56,11 +63,13 @@ public class EnumsServiceImp implements EnumsService {
         List<EnumGroupDTO> result = new ArrayList<>();
         for (String n : names) {
             switch (n) {
+                case "GroupPrivacy" -> result.add(getGroupPrivacy());
                 case "GroupTopic" -> result.add(getGroupTopic());
-                case "AccountStatus" -> result.add(getAccountStatus());
+                case "JoinPolicy" -> result.add(getJoinPolicy());
                 case "MemberRole" -> result.add(getMemberRole());
                 case "MemberState" -> result.add(getMemberState());
-                case "JoinPolicy" -> result.add(getJoinPolicy());
+                case "RequestStatus" -> result.add(getRequestStatus());
+                case "AccountStatus" -> result.add(getAccountStatus());
                 case "Role" -> result.add(getRole());
                 case "CodeStatus" -> result.add(getCodeStatus());
                 default -> {

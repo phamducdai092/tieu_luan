@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/groups/{groupId}/invitations")
+@RequestMapping("/groups/{slug}/invitations")
 @RequiredArgsConstructor
 public class InvitationController {
 
@@ -23,11 +23,11 @@ public class InvitationController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> createInvitation(
-            @PathVariable Long groupId,
+            @PathVariable String slug,
             @AuthenticationPrincipal(expression = "user") Users inviter,
             @RequestBody InvitationRequest request) {
         String inviteeEmail = request.email();
-        invitationService.createInvitation(groupId, inviter.getId(), inviteeEmail);
+        invitationService.createInvitation(slug, inviter.getId(), inviteeEmail);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .message("Invitation sent successfully")
@@ -37,9 +37,9 @@ public class InvitationController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<InvitationResponse>>> getPendingInvitations(
-            @PathVariable Long groupId,
+            @PathVariable String slug,
             @AuthenticationPrincipal(expression = "user") Users owner) {
-        List<InvitationResponse> invitations = invitationService.getPendingInvitationsForGroup(groupId, owner.getId());
+        List<InvitationResponse> invitations = invitationService.getPendingInvitationsForGroup(slug, owner.getId());
         return ResponseEntity.ok(ApiResponse.<List<InvitationResponse>>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .message("Pending invitations retrieved successfully")
@@ -47,9 +47,9 @@ public class InvitationController {
                 .build());
     }
 
-    @DeleteMapping("/{invitationId}")
+    @PutMapping("/{invitationId}")
     public ResponseEntity<ApiResponse<Void>> revokeInvitation(
-            @PathVariable Long groupId,
+            @PathVariable String slug,
             @PathVariable Long invitationId,
             @AuthenticationPrincipal(expression = "user") Users owner) {
         invitationService.revokeInvitation(invitationId, owner.getId());

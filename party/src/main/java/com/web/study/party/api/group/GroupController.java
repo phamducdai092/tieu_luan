@@ -2,18 +2,17 @@ package com.web.study.party.api.group;
 
 import com.web.study.party.dto.request.group.GroupCreateRequest;
 import com.web.study.party.dto.response.ApiResponse;
-import com.web.study.party.dto.response.PageMeta;
 import com.web.study.party.dto.response.group.GroupCardResponse;
+import com.web.study.party.dto.response.group.GroupDetailResponse;
 import com.web.study.party.dto.response.group.GroupResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
 import com.web.study.party.services.group.GroupServiceImp;
 import com.web.study.party.utils.Paging;
-import com.web.study.party.utils.ResponseUtil;
+import com.web.study.party.utils.filters.GroupFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -56,7 +55,7 @@ public class GroupController {
         Pageable pageable = Paging.parsePageable(page, size, sort);
         var result = groupService.getJoinedGroups(user.getId(), pageable);
 
-        return filterPageable(topic, keyword, req, result);
+        return GroupFilter.filterGroupCardResponsePageable(topic, keyword, req, result);
     }
 
     @GetMapping("/owned")
@@ -73,12 +72,31 @@ public class GroupController {
 
         var result = groupService.getOwnedGroups(user.getId(), pageable);
 
-        return filterPageable(topic, keyword, req, result);
+        return GroupFilter.filterGroupCardResponsePageable(topic, keyword, req, result);
     }
 
-    @PutMapping("/{gid}")
-    public ResponseEntity<ApiResponse<GroupResponse>> update(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, @Valid @RequestBody GroupCreateRequest req, HttpServletRequest httpRequest) {
-        GroupResponse group = groupService.update(user.getId(), gid, req);
+    @GetMapping("/{slug}")
+    public ResponseEntity<ApiResponse<GroupDetailResponse>> getGroupDetails(
+            @AuthenticationPrincipal(expression = "user") Users currentUser,
+            @PathVariable String slug,
+            HttpServletRequest httpRequest
+    ) {
+        GroupDetailResponse groupDetails = groupService.getDetailBySlug(slug, currentUser);
+
+        ApiResponse<GroupDetailResponse> response = ApiResponse.<GroupDetailResponse>builder()
+                .status(CodeStatus.SUCCESS.getHttpCode())
+                .code("SUCCESS")
+                .data(groupDetails)
+                .path(httpRequest.getRequestURI())
+                .message("Lấy thông tin phòng thành công")
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{slug}")
+    public ResponseEntity<ApiResponse<GroupResponse>> update(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable String slug, @Valid @RequestBody GroupCreateRequest req, HttpServletRequest httpRequest) {
+        GroupResponse group = groupService.update(user.getId(), slug, req);
         ApiResponse<GroupResponse> response = ApiResponse.<GroupResponse>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .code("SUCCESS")
@@ -89,9 +107,9 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{gid}")
-    public ResponseEntity<ApiResponse<Void>> deleteGroup(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable Long gid, HttpServletRequest httpRequest) {
-        groupService.delete(user.getId(), gid);
+    @DeleteMapping("/{slug}")
+    public ResponseEntity<ApiResponse<Void>> deleteGroup(@AuthenticationPrincipal(expression = "user") Users user, @PathVariable String slug, HttpServletRequest httpRequest) {
+        groupService.delete(user.getId(), slug);
         ApiResponse<Void> response = ApiResponse.<Void>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .code("SUCCESS")
@@ -100,22 +118,5 @@ public class GroupController {
                 .path(httpRequest.getRequestURI())
                 .build();
         return ResponseEntity.ok(response);
-    }
-
-    private ResponseEntity<ApiResponse<List<GroupCardResponse>>> filterPageable(@RequestParam(required = false) String topic, @RequestParam(required = false) String keyword, HttpServletRequest req, Page<GroupCardResponse> result) {
-        Map<String, Object> filters = new LinkedHashMap<>();
-        if (topic != null && !topic.isBlank()) filters.put("topic", topic);
-        if (keyword != null && !keyword.isBlank()) filters.put("keyword", keyword);
-
-        PageMeta meta = PageMeta.builder()
-                .page(result.getNumber())               // 0-based
-                .size(result.getSize())
-                .totalItems(result.getTotalElements())
-                .totalPages(result.getTotalPages())
-                .sort(Paging.sortString(result.getSort()))     // ví dụ "updatedAt: DESC,name: ASC"
-                .filters(filters.isEmpty() ? null : filters)
-                .build();
-
-        return ResponseUtil.page(result.getContent(), meta, "Fetched joined groups", req);
     }
 }

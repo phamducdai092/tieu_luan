@@ -11,7 +11,6 @@ public record GroupCreateRequest(
         @NotNull JoinPolicy joinPolicy,
         @NotNull GroupPrivacy groupPrivacy,
         @NotNull GroupTopic topic,
-        @Size(max = 10) String topicColor,
-        @Min(2) @Max(5000) Integer maxMembers
+        @Min(2) @Max(200) Integer maxMembers
 ) {
 }

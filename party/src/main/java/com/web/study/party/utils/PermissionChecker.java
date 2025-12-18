@@ -26,4 +26,9 @@ public class PermissionChecker {
             throw new IllegalArgumentException("Bạn không có quyền thực hiện hành động này");
         }
     }
+
+    public void requireMember(Long uid, Long gid) {
+        var gm = memberRepo.findByGroupIdAndUserId(gid, uid)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không phải là thành viên nhóm"));
+    }
 }

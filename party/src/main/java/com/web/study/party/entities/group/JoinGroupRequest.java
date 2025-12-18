@@ -30,6 +30,7 @@ public class JoinGroupRequest {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
+    @Column(length = 50)
     private RequestStatus status = RequestStatus.PENDING;
 
     @Builder.Default
