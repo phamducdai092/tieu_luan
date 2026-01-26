@@ -12,14 +12,17 @@ import {HeroBanner} from "@/components/features/home/HeroBanner.tsx"
 import {StreakCard} from "@/components/features/home/StreakCard.tsx"
 import {type QuickStat, QuickStats} from "@/components/features/home/QuickStats.tsx"
 import {WeekProgress, type ProgressItem} from "@/components/features/home/WeekProgress.tsx"
-import {GroupsBlock} from "@/components/features/home/GroupsBlock.tsx"
+import {GroupsBlock} from "@/components/shared/group/GroupsBlock.tsx"
 import {ScheduleToday, type TodayEvent} from "@/components/features/home/ScheduleToday.tsx";
+import {Star} from "lucide-react";
+import {QuickActions} from "@/components/features/home/QuickActions.tsx";
 
 export default function HomePage() {
     const {user} = useAuthStore()
     const nav = useNavigate()
 
     const joinedRooms: Room[] = useGroupStore((s) => s.userRoomsJoined)
+    const ownedRooms: Room[] = useGroupStore(s => s.userRoomsOwned);
     const groupEnum: EnumItem[] = useEnumStore().get("GroupTopic")
 
 // ---- demo data (can be fetched later) ----
@@ -103,11 +106,22 @@ export default function HomePage() {
                 <GroupsBlock
                     rooms={joinedRooms}
                     getEnum={(topic) => getEnumItem(groupEnum, topic)}
-                    onCreate={() => console.log("create group")}
                     onRoomClick={(r) => nav(`/rooms/${r.slug}`)}
-                    activeCount={3}
+                    blockName="Phòng học đã tham gia"
                 />
-
+                <GroupsBlock
+                    rooms={ownedRooms}
+                    getEnum={(topic) => getEnumItem(groupEnum, topic)}
+                    onRoomClick={(r) => nav(`/rooms/${r.slug}`)}
+                    blockName="Phòng học của tôi"
+                />
+                <div className="mt-6 p-4 bg-gradient-to-r from-muted/30 to-muted/10 rounded-xl">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2"><Star
+                        className="h-4 w-4 text-primary"/>
+                        Hành động nhanh
+                    </h3>
+                    <QuickActions/>
+                </div>
             </div>
         </div>
     )

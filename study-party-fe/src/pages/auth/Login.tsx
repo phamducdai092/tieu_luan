@@ -15,36 +15,67 @@ import {toast} from 'sonner';
 import useAuthStore from '@/store/auth.store.ts';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {AxiosError} from "axios";
+import {reBootstrapGroups} from "@/bootstrap/bootstrap.ts";
+
 export default function Login() {
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || "/";
 
     const {login, loadMe} = useAuthStore();
+
+    // THAY ĐỔI 1: State error nên là string hoặc null để dễ hiển thị
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const onSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         setLoading(true);
-        setError([]);
+        setError(null);
 
         try {
-            // 1) gọi store.login -> set token + (có thể set user từ response)
+            // 1. Gọi API Login -> Lấy Token
+            // Giả sử hàm login của m trả về response (chứa token & user info)
             await login({email, password});
-            await loadMe();
+            await reBootstrapGroups();
 
+            // 2. Thông báo thành công ngay lập tức
             toast.success('Đăng nhập thành công!');
-            navigate(from, {replace: true});
+
+            // 3. 🔥 TỐI ƯU TỐC ĐỘ:
+            // Gọi loadMe() ở background (Fire & Forget) - KHÔNG DÙNG AWAIT
+            // Để nó tự chạy ngầm, còn UI thì chuyển trang luôn cho mượt.
+            loadMe();
+
+            // 4. Điều hướng ngay lập tức
+            // Nếu API login có trả về role thì check luôn để điều hướng cho chuẩn
+
+            navigate(from || '/', {replace: true});
+
         } catch (err) {
+            let errorMessage = "Đã có lỗi xảy ra vui lòng thử lại.";
+
             if (err instanceof AxiosError) {
-                setError(err.response?.data.message);
-                toast.error('Có lỗi đã xảy ra: ', err.response?.data.message);
+                const responseMessage = err.response?.data?.message;
+                if (responseMessage) {
+                    if (Array.isArray(responseMessage)) {
+                        errorMessage = responseMessage.join(', ');
+                    } else {
+                        errorMessage = String(responseMessage);
+                    }
+                } else {
+                    errorMessage = err.message;
+                }
             } else if (err instanceof Error) {
-                console.error("General error:", err.message);
+                errorMessage = err.message;
             }
+
+            setError(errorMessage);
+            toast.error(errorMessage);
+            console.error("Login Error Details:", err);
         } finally {
             setLoading(false);
         }
@@ -54,7 +85,6 @@ export default function Login() {
         <div
             className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                {/* Login Card */}
                 <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
                     <CardHeader className="text-center pb-4">
                         <CardTitle className="text-3xl font-semibold text-gray-800">
@@ -75,10 +105,7 @@ export default function Login() {
                     <CardContent>
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="email"
-                                    className="text-lg font-medium text-gray-700"
-                                >
+                                <Label htmlFor="email" className="text-lg font-medium text-gray-700">
                                     Email
                                 </Label>
                                 <Input
@@ -87,15 +114,12 @@ export default function Login() {
                                     placeholder="example@student.edu.vn"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="text-3xl h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                                    className="text-lg h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label
-                                    htmlFor="password"
-                                    className="text-lg font-medium text-gray-700"
-                                >
+                                <Label htmlFor="password" className="text-lg font-medium text-gray-700">
                                     Mật khẩu
                                 </Label>
                                 <Input
@@ -103,16 +127,16 @@ export default function Login() {
                                     type="password"
                                     placeholder="••••••••"
                                     value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
+                                    onChange={(e) => setPassword(e.target.value)}
                                     className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                                 />
                             </div>
 
-                            {(error.length > 0) && (
-                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                                    <p className="text-lg text-red-600">
+                            {/* THAY ĐỔI 3: Render có điều kiện an toàn */}
+                            {error && (
+                                <div
+                                    className="p-3 bg-red-50 border border-red-200 rounded-lg animate-in fade-in slide-in-from-top-2">
+                                    <p className="text-base text-red-600 font-medium text-center">
                                         {error}
                                     </p>
                                 </div>
@@ -127,7 +151,7 @@ export default function Login() {
                                     <div className="flex items-center gap-2">
                                         <div
                                             className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                        Đang đăng nhập...
+                                        Đang xử lý...
                                     </div>
                                 ) : (
                                     'Đăng nhập'
@@ -139,16 +163,11 @@ export default function Login() {
                     <CardFooter>
                         <div className="w-full text-center space-y-4">
                             <div className="flex items-center justify-between text-base">
-                                <a
-                                    href="/forgot-password"
-                                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                                >
+                                <a href="/forgot-password"
+                                   className="text-blue-600 hover:text-blue-800 hover:underline">
                                     Quên mật khẩu?
                                 </a>
-                                <a
-                                    href="/register"
-                                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                                >
+                                <a href="/register" className="text-blue-600 hover:text-blue-800 hover:underline">
                                     Đăng ký tài khoản
                                 </a>
                             </div>

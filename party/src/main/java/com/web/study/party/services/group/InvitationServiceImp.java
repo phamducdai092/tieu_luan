@@ -7,15 +7,19 @@ import com.web.study.party.entities.enums.group.MemberRole;
 import com.web.study.party.entities.enums.group.RequestStatus;
 import com.web.study.party.entities.group.GroupInvite;
 import com.web.study.party.entities.group.StudyGroups;
-import com.web.study.party.exeption.BadRequestException;
-import com.web.study.party.exeption.ResourceNotFoundException;
+import com.web.study.party.exception.BadRequestException;
+import com.web.study.party.exception.ResourceNotFoundException;
 import com.web.study.party.repositories.UserRepo;
 import com.web.study.party.repositories.group.GroupInviteRepo;
 import com.web.study.party.repositories.group.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
 import com.web.study.party.services.mail.MailService;
+import com.web.study.party.services.notification.NotificationService;
+import com.web.study.party.utils.socket.SocketConst;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -23,9 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,35 +41,35 @@ public class InvitationServiceImp implements InvitationService {
     private final InvitationMapper invitationMapper;
     private final MailService mailService;
 
+    // 2. Inject NotificationService
+    private final NotificationService notificationService;
+
     @Value("${app.base-url.frontend}")
     private String frontendBaseUrl;
 
     @Override
     @Transactional
     public void createInvitation(String slug, Long inviterId, String inviteeEmail) {
-        // B1: Tìm các entity cần thiết
+        // ... (Giữ nguyên logic kiểm tra group, user, quyền hạn) ...
         StudyGroups group = groupRepo.findStudyGroupBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhóm với ID: " + slug));
 
         Users inviter = userRepo.findById(inviterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng (người mời) với ID: " + inviterId));
 
-        // Người được mời có thể chưa có tài khoản, nên ta dùng findByEmail
         Users invitee = userRepo.findByEmail(inviteeEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng được mời với email: " + inviteeEmail));
 
-
-        // B2: Kiểm tra quyền của người mời (Owner hoặc MOD)
+        // ... (Giữ nguyên logic check permission & exist) ...
         boolean hasPermission = group.getOwner().getId().equals(inviterId) ||
-                groupMemberRepo.findByGroupAndUserId(group, inviterId)
-                        .map(member -> member.getRole() == MemberRole.MOD || member.getRole() == MemberRole.OWNER)
-                        .orElse(false);
+                                groupMemberRepo.findByGroupAndUserId(group, inviterId)
+                                        .map(member -> member.getRole() == MemberRole.MOD || member.getRole() == MemberRole.OWNER)
+                                        .orElse(false);
 
         if (!hasPermission) {
             throw new AccessDeniedException("Bạn không có quyền mời thành viên vào nhóm này.");
         }
 
-        // B3: Kiểm tra xem người được mời đã là thành viên hoặc có yêu cầu/lời mời đang chờ chưa
         if (groupMemberRepo.existsByGroupIdAndUserId(group.getId(), invitee.getId())) {
             throw new BadRequestException("Người dùng này đã là thành viên của nhóm.");
         }
@@ -75,93 +77,125 @@ public class InvitationServiceImp implements InvitationService {
             throw new BadRequestException("Bạn đã mời người dùng này vào nhóm rồi, vui lòng đợi họ phản hồi.");
         }
 
-        // B4: Tạo token và record lời mời
+        // Tạo lời mời
         String token = UUID.randomUUID().toString();
-
         GroupInvite invitation = GroupInvite.builder()
                 .group(group)
                 .inviter(inviter)
                 .invitee(invitee)
                 .token(token)
                 .status(RequestStatus.PENDING)
-                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS)) // Lời mời có hiệu lực trong 7 ngày
+                .expiresAt(Instant.now().plus(7, ChronoUnit.DAYS))
                 .build();
 
         groupInviteRepo.save(invitation);
 
-        // B5: Gửi email (Phần này sẽ tích hợp với MailService sau)
+        // Gửi email (Giữ nguyên)
         String invitationLink = frontendBaseUrl + "/invites/" + invitation.getToken();
         mailService.sendInvitation(inviteeEmail, inviter.getDisplayName(), group.getName(), invitationLink);
-        // System.out.println("Gửi mail mời tới " + inviteeEmail + " với link: " + invitationLink);
+
+        // 👇 3. Gửi Thông báo Realtime cho người được mời (Invitee)
+        String notifContent = String.format("%s đã mời bạn tham gia nhóm '%s'", inviter.getDisplayName(), group.getName());
+        // Link dẫn đến trang danh sách lời mời của User
+        String notifLink = "/notifications";
+
+        notificationService.sendNotification(
+                invitee,
+                notifContent,
+                notifLink,
+                SocketConst.EVENT_INVITATION_RECEIVED
+        );
     }
 
     @Override
     @Transactional
     public void acceptInvitation(String token, Long userId) {
-        // B1: Tìm lời mời bằng token.
+        // ... (Giữ nguyên logic validate token) ...
         GroupInvite invite = groupInviteRepo.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Lời mời không hợp lệ hoặc đã bị xóa."));
 
-        // B2: Kiểm tra trạng thái và hạn của lời mời.
         if (invite.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException("Lời mời này đã được xử lý trước đó.");
         }
         if (invite.getExpiresAt() != null && invite.getExpiresAt().isBefore(Instant.now())) {
-            invite.setStatus(RequestStatus.EXPIRED); // Cập nhật trạng thái hết hạn
+            invite.setStatus(RequestStatus.EXPIRED);
             groupInviteRepo.save(invite);
             throw new BadRequestException("Lời mời này đã hết hạn.");
         }
-
-        // B3: Rất quan trọng - Xác thực đúng người nhận lời mời.
-        // Đảm bảo người dùng đang đăng nhập chính là người được mời.
         if (!invite.getInvitee().getId().equals(userId)) {
             throw new AccessDeniedException("Bạn không phải là người nhận được lời mời này.");
         }
 
-        // B4: Mọi thứ hợp lệ -> Thêm thành viên vào nhóm.
+        // Thêm thành viên
         groupMemberService.addMember(invite.getGroup().getId(), invite.getInvitee().getId());
 
-        // B5: Cập nhật trạng thái lời mời.
+        // Cập nhật trạng thái
         invite.setStatus(RequestStatus.ACCEPTED);
         groupInviteRepo.save(invite);
+
+        // 👇 4. Gửi Thông báo Realtime cho người mời (Inviter)
+        Users invitee = invite.getInvitee();
+        Users inviter = invite.getInviter();
+        StudyGroups group = invite.getGroup();
+
+        String notifContent = String.format("%s đã chấp nhận lời mời tham gia nhóm '%s'", invitee.getDisplayName(), group.getName());
+        String notifLink = "/rooms/" + group.getSlug(); // Bấm vào là về lại nhóm
+
+        notificationService.sendNotification(
+                inviter,
+                notifContent,
+                notifLink,
+                SocketConst.EVENT_INVITATION_ACCEPTED
+        );
     }
 
     @Override
     @Transactional
     public void declineInvitation(String token) {
-        // B1: Tìm lời mời bằng token.
+        // ... (Logic cũ) ...
         GroupInvite invite = groupInviteRepo.findByToken(token)
                 .orElseThrow(() -> new ResourceNotFoundException("Lời mời không hợp lệ hoặc đã bị xóa."));
 
-        // B2: Kiểm tra trạng thái.
         if (invite.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException("Lời mời này đã được xử lý trước đó.");
         }
 
-        // B3: Cập nhật trạng thái thành "Đã từ chối".
         invite.setStatus(RequestStatus.DECLINED);
         groupInviteRepo.save(invite);
+
+        // 👇 5. (Optional) Gửi thông báo cho người mời biết là bị từ chối
+        Users invitee = invite.getInvitee();
+        Users inviter = invite.getInviter();
+        StudyGroups group = invite.getGroup();
+
+        String notifContent = String.format("%s đã từ chối lời mời tham gia nhóm '%s'", invitee.getDisplayName(), group.getName());
+
+        notificationService.sendNotification(
+                inviter,
+                notifContent,
+                "", // Không cần link cụ thể
+                SocketConst.EVENT_INVITATION_DECLINED
+        );
     }
 
+    // ... (Các hàm revoke, getPendingInvitations giữ nguyên) ...
     @Override
     @Transactional
     public void revokeInvitation(Long invitationId, Long ownerId) {
-        // B1: Tìm lời mời
+        // Code cũ giữ nguyên
         GroupInvite invite = groupInviteRepo.findById(invitationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lời mời với ID: " + invitationId));
 
-        // B2: Kiểm tra quyền (chỉ người mời hoặc owner/mod của nhóm mới có quyền thu hồi)
         boolean hasPermission = invite.getInviter().getId().equals(ownerId) ||
-                invite.getGroup().getOwner().getId().equals(ownerId) ||
-                groupMemberRepo.findByGroupAndUserId(invite.getGroup(), ownerId)
-                        .map(member -> member.getRole() == MemberRole.MOD)
-                        .orElse(false);
+                                invite.getGroup().getOwner().getId().equals(ownerId) ||
+                                groupMemberRepo.findByGroupAndUserId(invite.getGroup(), ownerId)
+                                        .map(member -> member.getRole() == MemberRole.MOD)
+                                        .orElse(false);
 
         if (!hasPermission) {
             throw new AccessDeniedException("Bạn không có quyền thu hồi lời mời này.");
         }
 
-        // B3: Đóng lời mời (xóa hoặc cập nhật trạng thái)
         if (invite.getStatus() != RequestStatus.PENDING) {
             throw new BadRequestException("Chỉ có thể thu hồi lời mời đang chờ.");
         }
@@ -170,39 +204,30 @@ public class InvitationServiceImp implements InvitationService {
     }
 
     @Override
-    public List<InvitationResponse> getPendingInvitationsForGroup(String slug, Long ownerId) {
-        // B1: Kiểm tra quyền
+    public Page<InvitationResponse> getPendingInvitationsForGroup(String slug, Long ownerId, RequestStatus status, String keyword, Pageable pageable) {
+        // Code cũ giữ nguyên
         StudyGroups group = groupRepo.findStudyGroupBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhóm với ID: " + slug));
 
         boolean hasPermission = group.getOwner().getId().equals(ownerId) ||
-                groupMemberRepo.findByGroupAndUserId(group, ownerId)
-                        .map(member -> member.getRole() == MemberRole.MOD)
-                        .orElse(false);
+                                groupMemberRepo.findByGroupAndUserId(group, ownerId)
+                                        .map(member -> member.getRole() == MemberRole.MOD)
+                                        .orElse(false);
 
         if (!hasPermission) {
             throw new AccessDeniedException("Bạn không có quyền xem danh sách lời mời của nhóm này.");
         }
-
-        // B2: Lấy danh sách lời mời đang chờ
-        List<GroupInvite> invites = groupInviteRepo.findByGroupAndStatus(group, RequestStatus.PENDING);
-
-        // B3: Map sang DTO và trả về
-        return invites.stream()
-                .map(invitationMapper::toResponse)
-                .collect(Collectors.toList());
+        return groupInviteRepo.findInvitationsForGroup(group.getId(), status, keyword, pageable)
+                .map(invitationMapper::toResponse);
     }
 
     @Override
-    public List<InvitationResponse> getPendingInvitationsForUser(
-            @AuthenticationPrincipal(expression = "user") Users invitee
+    public Page<InvitationResponse> getPendingInvitationsForUser(
+            @AuthenticationPrincipal(expression = "user") Users invitee,
+            RequestStatus status, String keyword, Pageable pageable
     ) {
-        // B1: Lấy danh sách lời mời đang chờ cho user
-        List<GroupInvite> invites = groupInviteRepo.findByInviteeAndStatus(invitee, RequestStatus.PENDING);
-
-        // B2: Map sang DTO và trả về
-        return invites.stream()
-                .map(invitationMapper::toResponse)
-                .collect(Collectors.toList());
+        // Code cũ giữ nguyên
+        return groupInviteRepo.findInvitationsForUser(invitee.getId(), status, keyword, pageable)
+                .map(invitationMapper::toResponse);
     }
 }

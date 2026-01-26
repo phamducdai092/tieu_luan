@@ -9,6 +9,7 @@ import com.web.study.party.utils.socket.SocketConst;
 import com.web.study.party.utils.socket.SocketNotify;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class NotificationServiceImp implements NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Override
+    @Transactional
     @SocketNotify(
             topic = "'" + SocketConst.PREFIX_TOPIC_USER + "' + #result.recipient.id + '/notifications'",
             type = SocketConst.EVENT_NEW_NOTIFICATION

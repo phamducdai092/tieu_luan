@@ -11,8 +11,8 @@ import com.web.study.party.entities.enums.group.MemberRole;
 import com.web.study.party.entities.enums.group.RequestStatus;
 import com.web.study.party.entities.group.JoinGroupRequest;
 import com.web.study.party.entities.group.StudyGroups;
-import com.web.study.party.exeption.BadRequestException;
-import com.web.study.party.exeption.ResourceNotFoundException;
+import com.web.study.party.exception.BadRequestException;
+import com.web.study.party.exception.ResourceNotFoundException;
 import com.web.study.party.repositories.UserRepo;
 import com.web.study.party.repositories.group.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
@@ -94,12 +94,12 @@ public class JoinRequestServiceImp implements JoinRequestService {
         String link = "/rooms/" + group.getSlug() + "?tab=requests"; // Link đến tab quản lý
 
         // Gửi cho Owner
-        notificationService.sendNotification(owner, notifContent, link, "JOIN_REQUEST");
+        notificationService.sendNotification(owner, notifContent, link, SocketConst.EVENT_JOIN_REQUEST);
 
         // 2. Gửi cho các Mod (Lọc ra các member có role MOD)
         List<Users> mods = groupMemberRepo.findModsBySlug(slug);
         for (Users mod : mods) {
-            notificationService.sendNotification(mod, notifContent, link, "JOIN_REQUEST");
+            notificationService.sendNotification(mod, notifContent, link, SocketConst.EVENT_JOIN_REQUEST);
         }
     }
 

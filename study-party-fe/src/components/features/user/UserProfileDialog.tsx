@@ -195,6 +195,8 @@ export function UserInfoDialog({
                                                 fallback={u.displayName}
                                                 alt={u.displayName}
                                                 size={160}
+                                                userId={u.id}
+                                                showStatus={true}
                                             />
                                         </div>
                                         <Button

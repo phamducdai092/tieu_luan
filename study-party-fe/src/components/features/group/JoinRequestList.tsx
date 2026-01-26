@@ -83,7 +83,13 @@ export function JoinRequestList({groupSlug}: { groupSlug: string }) {
                     <div key={req.requestId}
                          className="flex items-start justify-between gap-2 p-3 rounded-lg border bg-card shadow-sm">
                         <div className="flex items-center justify-center gap-3 min-w-0">
-                            <AvatarDisplay src={req.owner.avatarUrl} size={48}/>
+                            <AvatarDisplay
+                                src={req.owner.avatarUrl}
+                                size={48}
+                                fallback={req.owner.displayName}
+                                userId={req.owner.id}
+                                showStatus={true}
+                            />
                             <div className="min-w-0">
                                 <p className="text-left text-sm font-bold truncate">{req.user.displayName}</p>
                                 <p className="text-xs text-muted-foreground">

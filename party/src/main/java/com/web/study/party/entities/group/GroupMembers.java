@@ -30,10 +30,13 @@ public class GroupMembers {
     private Users user;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     MemberRole role = MemberRole.MEMBER;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     MemberState state = MemberState.APPROVED;
 
-    Instant joinedAt = Instant.now();
+    private Instant joinedAt = Instant.now();
+
 }

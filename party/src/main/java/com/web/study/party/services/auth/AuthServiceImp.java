@@ -8,10 +8,12 @@ import com.web.study.party.dto.response.TokenResponse;
 import com.web.study.party.dto.response.auth.AuthResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.Role;
-import com.web.study.party.exeption.UnverifiedAccountException;
+import com.web.study.party.exception.UnverifiedAccountException;
 import com.web.study.party.jwt.JwtProperties;
 import com.web.study.party.jwt.JwtService;
 import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.services.mail.MailService;
+import com.web.study.party.services.otp.OtpService;
 import com.web.study.party.session.RefreshTokenStore;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -34,6 +36,8 @@ public class AuthServiceImp implements AuthService {
     private final JwtProperties jwtProps;
     private final RefreshTokenStore refreshTokenStore;
     private final UserMapper userMapper;
+    private final OtpService otpService;
+    private final MailService mailService;
 
     private AuthResponse getAuthResponse(Users user) {
         var jti = jwtService.newJti();
@@ -50,7 +54,7 @@ public class AuthServiceImp implements AuthService {
 
     @Transactional
     @Override
-    public AuthResponse register(RegisterRequest req) {
+    public void register(RegisterRequest req) {
 
         if(userRepo.existsByEmail(req.email())) {
             throw new IllegalArgumentException("Email đã được sử dụng");
@@ -62,11 +66,19 @@ public class AuthServiceImp implements AuthService {
                 .email(req.email())
                 .password(hashedPassword)
                 .role(Role.USER)
-                .verified(false)
+                .verified(false) // Mặc định chưa xác thực
                 .build();
-        user = userRepo.save(user);
 
-        return getAuthResponse(user);
+        userRepo.save(user);
+
+        // 👇 LOGIC GỬI OTP SAU KHI ĐĂNG KÝ
+        // Key Redis: "otp:verify:abc@gmail.com"
+        String otpKey = "otp:verify:" + req.email();
+        // Sinh OTP 6 số, tồn tại 5 phút (300s)
+        String otpCode = otpService.generateAndStore(otpKey, 300);
+
+        // Gửi mail
+        mailService.sendOtp(req.email(), "Xác thực tài khoản đăng ký", otpCode, 300);
     }
 
     @Override

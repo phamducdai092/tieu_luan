@@ -24,6 +24,13 @@ export type UserBrief = {
     displayName?: string | "Chưa đặt tên";
 }
 
+export type UserSearchResponse = {
+    id: number;
+    email: string;
+    avatarUrl?: string;
+    displayName?: string | "Chưa đặt tên";
+}
+
 export type UserInformationUpdatePayload = {
     avatarUrl?: string;
     bannerUrl?: string;
@@ -50,4 +57,12 @@ export interface ProfilePageProps {
     achievements?: Achievement[];
     flashcards?: FlashcardSet[];
     files?: SharedFile[];
+}
+
+export type AssigneeResponse = {
+    id: number;
+    displayName?: string;
+    avatarUrl?: string;
+    email: string;
+    assignedAt: string; // ISO date string
 }

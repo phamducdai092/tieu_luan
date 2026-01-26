@@ -41,19 +41,18 @@ const useAuthStore = create<AuthState>()(
 			},
 
 			register: async (payload: RegisterPayload) => {
-				set({ loading: true, error: null});
+				set({ loading: true, error: null });
 				try {
-					const res = await register(payload);
-					const { accessToken, user } = (res.data || {});
-					if(!accessToken) throw new Error('No access token');
-					setTokens({accessToken});
-					set({user: user ?? null, userRoles: [user.role], loading: false});
+					// Gọi API đăng ký
+					await register(payload);
+
+					set({ loading: false });
 				} catch (e: any) {
 					set({
 						error:
 							e?.response?.data?.message ||
 							e?.message ||
-							'Login failed',
+							'Register failed',
 						loading: false,
 					});
 					throw e;

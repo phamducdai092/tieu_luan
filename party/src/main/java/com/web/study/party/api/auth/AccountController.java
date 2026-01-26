@@ -18,6 +18,9 @@ public class AccountController {
 
     private final AccountService accountService;
 
+//    @GetMapping("{userId}")
+//    public z
+
     @PostMapping("/verify-email/request")
     public ResponseEntity<ApiResponse<Void>> verifyEmail(@Valid @RequestBody VerifyEmailRequest req, HttpServletRequest httpRequest) {
         accountService.requestVerifyEmail(req);

@@ -1,18 +1,23 @@
 import http from "@/lib/http";
 import type {PagingPayload} from "@/types/paging.type.ts";
-import type {ApiResponse} from "@/types/api.type.ts";
+import type {ApiResponse, UnwrappedResponse} from "@/types/api.type.ts";
 import type {Room, RoomDetail} from "@/types/group/group.type.ts";
 import type {CreateRoomFormValues} from "@/types/schema/group.schema.ts";
 
 // group services
+export const getRoomsDiscover = async (pagingPayload?: PagingPayload) => {
+    const res = await http.get<Room[]>("groups/discover", {params: pagingPayload});
+    return res as UnwrappedResponse<Room[]>;
+};
+
 export const getRoomsUserJoined = async (pagingPayload?: PagingPayload) => {
-    const res = await http.get<ApiResponse<Room[]>>("groups/joined", {params: pagingPayload});
-    return res.data;
+    const res = await http.get<Room[]>("groups/joined", {params: pagingPayload});
+    return res as UnwrappedResponse<Room[]>;
 };
 
 export const getRoomsUserOwned = async (pagingPayload?: PagingPayload) => {
-    const res = await http.get<ApiResponse<Room[]>>("groups/owned", {params: pagingPayload})
-    return res.data;
+    const res = await http.get<Room[]>("groups/owned", {params: pagingPayload})
+    return res as UnwrappedResponse<Room[]>;
 }
 
 export const createRoom = async (createRoomPayload: CreateRoomFormValues) => {

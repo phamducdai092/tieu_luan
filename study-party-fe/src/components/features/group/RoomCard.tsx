@@ -7,7 +7,7 @@ import type {EnumItem} from "@/types/enum.type.ts";
 import {TopicBadge} from "@/components/shared/TopicBadge.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 
-export default function RoomCard({room, onClick, enumItem}: { room: Room; onClick?: () => void; enumItem?: EnumItem }) {
+export default function RoomCard({room, onClick, enumItem, onlineCount = 0}: { room: Room; onClick?: () => void; enumItem?: EnumItem; onlineCount?: number }) {
     const live = true;
     return (
         <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group border-0 shadow-md"
@@ -26,12 +26,12 @@ export default function RoomCard({room, onClick, enumItem}: { room: Room; onClic
                             <Badge
                                 className={cn(
                                     "text-xs px-2 py-0.5",
-                                    live
+                                    onlineCount > 0
                                         ? "bg-success/10 text-success border-success/20"
                                         : "bg-muted text-muted-foreground"
                                 )}
                             >
-                                20 đang online
+                                {onlineCount} đang online
                             </Badge>
                         </div>
                         <div className="text-sm mt-4 text-muted-foreground space-y-1">

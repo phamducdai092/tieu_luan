@@ -4,12 +4,15 @@ import type {MemberRole} from "@/types/enum/group.enum.ts";
 export type RoomState = {
     userRoomsJoined: Room[];
     userRoomsOwned: Room[];
+    discoverRooms: Room[];
+
     setRoomsUserJoined: (rooms: Room[]) => void;
     setRoomsUserOwned: (rooms: Room[]) => void;
+    setDiscoverRooms: (rooms: Room[]) => void;
 }
 
 export type Room = {
-    id: string;
+    id: number;
     name: string;
     slug: string;
     description: string;
@@ -19,6 +22,7 @@ export type Room = {
     memberCount: number;
     ownerId: number;
     createdAt: string;
+    deleted: boolean;
 };
 
 

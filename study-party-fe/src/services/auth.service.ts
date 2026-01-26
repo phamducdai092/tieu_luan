@@ -8,7 +8,7 @@ export const login = (payload: LoginPayload) => {
 };
 
 export const register = (payload: RegisterPayload) => {
-	return http.post<AuthResponse>("auth/register", payload,  { withCredentials: true });
+	return http.post<void>("auth/register", payload,  { withCredentials: true });
 };
 
 export const logout = () => {

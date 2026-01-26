@@ -2,7 +2,7 @@ import http from "@/lib/http";
 import type { ApiResponse } from "@/types/api.type.ts";
 import type { EnumGroup } from "@/types/enum.type.ts";
 
-// Lấy theo danh sách tên enum: /enums?names=AccountStatus,MemberRole,...
+// Lấy theo danh sách tên enum: /enums?names=AccountStatusType,MemberRole,...
 export const getEnumsByNames = async (names?: string[]) => {
     const res = await http.get<ApiResponse<EnumGroup[]>>(
         "enums",

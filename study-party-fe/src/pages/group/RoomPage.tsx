@@ -4,13 +4,13 @@ import {Input} from "@/components/ui/input";
 import {Separator} from "@/components/ui/separator";
 import {Star, Search, Globe2, LaptopMinimalCheck} from "lucide-react";
 import type {Room} from "@/types/group/group.type.ts";
-import RoomCard from "@/components/features/group/RoomCard.tsx";
 import Pomodoro from "@/components/shared/Pomodoro.tsx";
 import {useGroupStore} from "@/store/group.store.ts";
 import {useEnumStore} from "@/store/enum.store.ts";
 import type {EnumItem} from "@/types/enum.type.ts";
 import {getEnumItem} from "@/utils/enumItemExtract.ts";
 import CreateRoomDialog from "@/components/features/group/CreateRoomDialog.tsx";
+import {GroupsBlock} from "@/components/shared/group/GroupsBlock.tsx";
 
 export default function RoomPage() {
     const nav = useNavigate();
@@ -30,7 +30,13 @@ export default function RoomPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <CreateRoomDialog groupTopics={groupEnum}/>
-                        <Button className="gap-2"><Globe2 className="h-4 w-4"/>Khám phá</Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => nav('/groups/list/discover')}
+                        >
+                            <Globe2 className="h-4 w-4"/>Khám phá
+                        </Button>
                     </div>
 
                 </div>
@@ -53,27 +59,20 @@ export default function RoomPage() {
                         <h2 className="text-base font-semibold flex items-center gap-2">
                             <LaptopMinimalCheck className="h-4 w-4"/> Phòng đã tham gia
                         </h2>
-                        <Button variant="ghost" size="sm">Xem tất cả</Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => nav('/groups/list/joined')}
+                        >
+                            Xem thêm
+                        </Button>
                     </div>
-                    {joinedRooms.length > 0 ?
-                        (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 lg:grid-cols-2">
-                                {joinedRooms.map(r => (
-                                    <RoomCard key={r.id} room={r} enumItem={getEnumItem(groupEnum, r.topic)}
-                                              onClick={() => nav(`/rooms/${r.slug}`)}/>
-                                ))}
-                            </div>
-                        )
-                        :
-                        (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 lg:grid-cols-1">
-                                <div
-                                    className="col-span-1 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                                    Bạn chưa tham gia phòng học nào. Hãy khám phá và tham gia một phòng học để bắt đầu!
-                                </div>
-                            </div>
-                        )
-                    }
+                    <GroupsBlock
+                        rooms={joinedRooms}
+                        getEnum={(topic) => getEnumItem(groupEnum, topic)}
+                        onRoomClick={(r) => nav(`/rooms/${r.slug}`)}
+                        blockName="Phòng học đang tham gia"
+                    />
                 </section>
 
                 <Separator/>
@@ -83,26 +82,20 @@ export default function RoomPage() {
                     <div className="flex items-center justify-between">
                         <h2 className="text-base font-semibold flex items-center gap-2">
                             <Star className="h-4 w-4"/> Phòng của tôi</h2>
-                        <Button variant="ghost" size="sm">Xem thêm</Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => nav('/groups/list/owned')}
+                        >
+                            Xem thêm
+                        </Button>
                     </div>
-                    {ownedRooms.length > 0 ?
-                        (<div className="grid grid-cols-1 gap-3 sm:grid-cols-1 lg:grid-cols-2">
-                            {ownedRooms.map(r => (
-                                <RoomCard key={r.id} room={r} enumItem={getEnumItem(groupEnum, r.topic)}
-                                          onClick={() => nav(`/rooms/${r.slug}`)}/>
-                            ))}
-                        </div>)
-                        :
-                        (
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 lg:grid-cols-1">
-                                <div
-                                    className="col-span-1 rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                                    Bạn chưa tạo phòng học nào. Hãy tạo phòng học để bắt đầu chia sẻ kiến thức với mọi
-                                    người!
-                                </div>
-                            </div>
-                        )
-                    }
+                    <GroupsBlock
+                        rooms={ownedRooms}
+                        getEnum={(topic) => getEnumItem(groupEnum, topic)}
+                        onRoomClick={(r) => nav(`/rooms/${r.slug}`)}
+                        blockName="Phòng học của tôi"
+                    />
                 </section>
             </div>
         </div>

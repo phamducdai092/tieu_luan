@@ -11,6 +11,18 @@ export default defineConfig({
     },
   },
   define: {
-    global: 'window',
-  }
+    global: 'window', // Fix lỗi global is not defined của sockjs-client cũ
+  },
+  server: {
+    allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        ws: true, // <--- BẬT CÁI NÀY Ở ĐÂY LÀ ĐỦ
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 })

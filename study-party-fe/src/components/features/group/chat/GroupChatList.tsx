@@ -1,159 +1,210 @@
-import {useRoomChatMessage} from "@/hooks/useRoomChatMessage.ts";
-import {getAccess} from "@/lib/token.ts";
-import {useLayoutEffect, useRef, useState, useEffect} from "react";
-import {type IMessage, MessageTypeEnum} from "@/types/chat/message.type.ts";
-import {toast} from "sonner";
-import useAuthStore from "@/store/auth.store.ts";
-import {GroupChatCard} from "@/components/features/group/chat/GroupChatCard.tsx";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
-import {getGroupMessages} from "@/services/chat.service.ts";
-import {Loader2} from "lucide-react";
-import {ChatInput} from "@/components/features/group/chat/ChatInput.tsx";
+import { useRoomChatMessage } from "@/hooks/useRoomChatMessage";
+import { getAccess } from "@/lib/token";
+import { useLayoutEffect, useRef, useEffect, useState, useMemo } from "react";
+import { MessageTypeEnum } from "@/types/chat/message.type";
+import useAuthStore from "@/store/auth.store";
+import { GroupChatCard } from "@/components/features/group/chat/GroupChatCard";
+import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
+import { getGroupMessages } from "@/services/chat.service";
+import { Loader2, ArrowDown } from "lucide-react";
+import { ChatInput } from "@/components/features/group/chat/ChatInput";
+import { useInView } from "react-intersection-observer";
 
-export function GroupChatList({groupId}: { groupId: number }) {
-    const {user} = useAuthStore();
+export function GroupChatList({ groupId }: { groupId: number }) {
+    const { user } = useAuthStore();
     const token = getAccess();
     const queryClient = useQueryClient();
 
-    if (!token) {
-        throw new Error("Đăng nhập để sử dụng tính năng chat nhóm.");
-    }
-
-    // 1. Hook WebSocket chỉ làm nhiệm vụ "nghe"
-    // Lưu ý: Nếu hook này trả về 1 mảng dồn tích, ta cần lấy phần tử cuối cùng
-    const {groupMessages, error, sendMessage} = useRoomChatMessage(groupId, token);
-
-    // REF này phải gắn vào thằng cha (Container), không phải thằng con
+    // UI Refs
     const chatContainerRef = useRef<HTMLDivElement>(null);
+    const [showScrollBottom, setShowScrollBottom] = useState(false);
 
-    // 2. React Query quản lý state chính (Lịch sử + Realtime)
-    const {data: messageList = [], isLoading: loading} = useQuery({
+    // Ref check scroll top để load more
+    const { ref: topObserverRef, inView: isAtTop } = useInView();
+
+    // Ref để track tin nhắn socket cuối cùng đã xử lý
+    const lastProcessedMsgIdRef = useRef<number | string | null>(null);
+
+    if (!token) throw new Error("Đăng nhập để sử dụng tính năng chat nhóm.");
+
+    // 1. WebSocket Hook
+    const { groupMessages, error, sendMessage } = useRoomChatMessage(groupId);
+
+    // 2. INFINITE QUERY
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+    } = useInfiniteQuery({
         queryKey: ["group-message", groupId],
-        queryFn: async () => {
-            const res = await getGroupMessages(groupId);
+        queryFn: async ({ pageParam = 0 }) => {
+            const res = await getGroupMessages(groupId, pageParam, 20);
             return res.data || [];
         },
-        staleTime: Infinity, // 🔥 Set Infinity để không tự fetch lại khi cache đã update thủ công
-        gcTime: 1000 * 60 * 10,
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) => {
+            return lastPage.length < 20 ? undefined : allPages.length;
+        },
+        staleTime: Infinity,
     });
 
-    // 3. 🔥 ĐỒNG BỘ: WebSocket -> React Query Cache
-    // Mỗi khi `groupMessages` (từ socket) thay đổi, ta nhét nó vào `messageList`
+    // 3. Flatten Data & DEDUPLICATE
+    const messageList = useMemo(() => {
+        if (!data) return [];
+        const flatList = data.pages.flat();
+        const uniqueMessagesMap = new Map();
+
+        flatList.forEach((msg) => {
+            if (msg.messageId) {
+                uniqueMessagesMap.set(String(msg.messageId), msg);
+            } else {
+                const tempKey = `${msg.content}-${msg.createdAt}`;
+                uniqueMessagesMap.set(tempKey, msg);
+            }
+        });
+
+        const uniqueList = Array.from(uniqueMessagesMap.values());
+        return uniqueList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }, [data]);
+
+    // 4. Load More Logic
+    useEffect(() => {
+        if (isAtTop && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [isAtTop, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    // 5. Handle Realtime Messages
     useEffect(() => {
         if (groupMessages && groupMessages.length > 0) {
-            // Lấy tin nhắn mới nhất từ Socket
-            const rawMsg = groupMessages[groupMessages.length - 1];
+            const newestMsg = groupMessages[groupMessages.length - 1];
+            if (lastProcessedMsgIdRef.current === newestMsg.messageId) return;
+            lastProcessedMsgIdRef.current = newestMsg.messageId;
 
-            // 🔥 BƯỚC QUAN TRỌNG: Vá lỗi ID null
-            // Nếu không có ID, tự bịa ra một cái ID dựa trên thời gian để React không bị loạn key
-            const newSocketMsg = {
-                ...rawMsg,
-                messageId: rawMsg.messageId || (Date.now() + Math.random())
-            };
-
-            console.log("🔥 PROCESSING SOCKET MSG:", newSocketMsg);
-
-            queryClient.setQueryData(["group-message", groupId], (oldData: IMessage[] | undefined) => {
-                const currentList = oldData || [];
-
-                // Check trùng lặp: Chỉ so sánh nếu ID CHÍNH THỨC trùng nhau
-                // Nếu là ID tự chế (số lớn do Date.now) thì coi như là tin mới luôn
-                const exists = currentList.some(msg => {
-                    // Nếu cả 2 đều có ID xịn thì so sánh
-                    if (msg.messageId && newSocketMsg.messageId) {
-                        return String(msg.messageId) === String(newSocketMsg.messageId);
-                    }
-                    return false;
-                });
-
-                if (exists) {
-                    console.log("⚠️ Message already exists in Cache");
-                    return currentList;
+            queryClient.setQueryData<InfiniteData<any>>(["group-message", groupId], (oldData) => {
+                if (!oldData) return oldData;
+                const newPages = [...oldData.pages];
+                const firstPage = [...newPages[0]];
+                const exists = firstPage.some(m => String(m.messageId) === String(newestMsg.messageId));
+                if (!exists) {
+                    firstPage.unshift(newestMsg);
+                    newPages[0] = firstPage;
                 }
-
-                console.log("✅ Adding new message to Cache");
-                return [...currentList, newSocketMsg];
+                return { ...oldData, pages: newPages };
             });
+
+            setTimeout(scrollToBottom, 100);
         }
     }, [groupMessages, groupId, queryClient]);
 
+    // 6. Scroll Handling
+    const prevScrollHeightRef = useRef<number>(0);
+    const prevMsgCountRef = useRef<number>(0);
 
-    // 4. Auto Scroll (Logic cũ của bạn, áp dụng cho list đã merge)
     useLayoutEffect(() => {
         const container = chatContainerRef.current;
-        if (container) {
-            const lastMsg = messageList[messageList.length - 1];
-            const isMyMsg = lastMsg?.sender.id === user?.id;
-            const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+        if (!container) return;
+        const currentScrollHeight = container.scrollHeight;
+        const currentMsgCount = messageList.length;
 
-            if (isNearBottom || isMyMsg) {
-                // Timeout nhỏ để đảm bảo React đã render DOM xong mới cuộn
-                setTimeout(() => {
-                    container.scrollTop = container.scrollHeight;
-                }, 100);
+        if (prevScrollHeightRef.current > 0 && currentMsgCount > prevMsgCountRef.current) {
+            if (isFetchingNextPage) {
+                container.scrollTop = currentScrollHeight - prevScrollHeightRef.current;
             }
         }
-    }, [messageList, user?.id]); // 🔥 Theo dõi messageList chứ không phải groupMessages
+        else if (prevMsgCountRef.current === 0 && currentMsgCount > 0) {
+            container.scrollTop = container.scrollHeight;
+        }
 
+        prevScrollHeightRef.current = currentScrollHeight;
+        prevMsgCountRef.current = currentMsgCount;
+    }, [messageList.length, isFetchingNextPage]);
 
-    const handleSend = async (content: string) => {
-
-        try {
-            // Gửi qua WebSocket (hoặc API)
-            await sendMessage(groupId, {content: content, type: MessageTypeEnum.TEXT});
-
-            // ⚠️ Lưu ý:
-            // Nếu WebSocket của bạn có cơ chế "Echo" (Gửi xong Server bắn lại tin đó về):
-            // -> Thì không cần update cache ở đây, useEffect ở trên sẽ lo.
-
-            // Nếu WebSocket KHÔNG Echo lại cho người gửi (chỉ gửi cho người khác):
-            // -> Thì bạn cần tự tạo tin nhắn giả (Optimistic Update) và nhét vào cache ở đây.
-
-            /* Ví dụ Optimistic Update (nếu cần):
-            const tempMsg: IMessage = {
-                messageId: Date.now(), // ID tạm
-                content: tempContent,
-                senderId: user!.id,
-                // ... các trường khác
-            };
-            queryClient.setQueryData(["group-message", groupId], (old: any) => [...old, tempMsg]);
-            */
-
-        } catch (err) {
-            toast.error("Gửi lỗi. Vui lòng thử lại.");
+    const scrollToBottom = () => {
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
+                behavior: "smooth"
+            });
         }
     };
 
-    if (loading) {
+    const handleScroll = () => {
+        if (chatContainerRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+            setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 300);
+        }
+    };
+
+    const handleSend = async (content: string, files: File[]) => {
+        try {
+            await sendMessage(
+                groupId,
+                { content: content, type: MessageTypeEnum.TEXT },
+                files
+            );
+        } catch (err) {
+            // Error handling
+        }
+    };
+
+    let lastVideoCallIndex = -1;
+    messageList.forEach((msg, index) => {
+        if (msg.type === "VIDEO_CALL") {
+            lastVideoCallIndex = index;
+        }
+    });
+
+    if (isLoading) {
         return (
-            <div className="flex justify-center p-4">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground"/>
+            <div className="flex justify-center h-full items-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         );
     }
 
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col h-full relative space-y-4">
             <div
                 ref={chatContainerRef}
-                className="flex flex-col h-60 overflow-y-auto border rounded-md p-3 bg-white scroll-smooth"
+                onScroll={handleScroll}
+                className="flex-1 min-h-0 flex flex-col overflow-y-auto border rounded-xl p-4 bg-slate-50 dark:bg-slate-900/50 scrollbar-thin"
             >
-                {error && (
-                    <div className="text-red-500 text-sm mb-2">Lỗi Socket: {error}</div>
+                {isFetchingNextPage && (
+                    <div className="flex justify-center py-2 shrink-0">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground"/>
+                    </div>
                 )}
 
-                {/* Render List duy nhất từ React Query */}
-                {messageList.map((msg) => (
-                    // Không cần truyền ref xuống con nữa, trừ khi cần xử lý riêng
-                    <GroupChatCard
-                        key={msg.messageId || Math.random()}
-                        msg={msg}
-                        userId={user!.id}
-                    />
-                ))}
+                <div ref={topObserverRef} className="h-1 shrink-0"/>
+
+                {error && <div className="text-red-500 text-xs mb-2 text-center">Socket Error: {error}</div>}
+
+                <div className="flex flex-col gap-2 mt-auto">
+                    {messageList.map((msg, index) => (
+                        <GroupChatCard
+                            key={msg.messageId || Math.random()}
+                            msg={msg}
+                            userId={user!.id}
+                            forceEnded={msg.type === "VIDEO_CALL" && index !== lastVideoCallIndex}
+                        />
+                    ))}
+                </div>
             </div>
 
-            <ChatInput onSend={handleSend}/>
+            {showScrollBottom && (
+                <button
+                    onClick={scrollToBottom}
+                    className="absolute bottom-16 right-6 bg-primary text-white p-2 rounded-full shadow-lg hover:bg-primary/90 transition-all animate-bounce z-10"
+                >
+                    <ArrowDown className="h-4 w-4" />
+                </button>
+            )}
+            <div className="shrink-0">
+                <ChatInput onSend={handleSend}/>
+            </div>
         </div>
     );
 }

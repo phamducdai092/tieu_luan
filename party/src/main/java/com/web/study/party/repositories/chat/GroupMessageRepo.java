@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GroupMessageRepo extends JpaRepository<GroupMessages, Long> {
     // Lấy lịch sử chat (phân trang)
-    Page<GroupMessages> findByGroupIdOrderByCreatedAtAsc(Long groupId, Pageable pageable);
+    Page<GroupMessages> findByGroupIdOrderByCreatedAtDesc(Long groupId, Pageable pageable);
 }

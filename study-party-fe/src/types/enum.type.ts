@@ -10,7 +10,7 @@ export type EnumItem = {
 };
 
 export type EnumGroup = {
-    name: string;        // ví dụ: "AccountStatus"
+    name: string;        // ví dụ: "AccountStatusType"
     items: EnumItem[];
 };
 

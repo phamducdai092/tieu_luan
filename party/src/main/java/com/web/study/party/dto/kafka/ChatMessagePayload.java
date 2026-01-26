@@ -1,9 +1,11 @@
 package com.web.study.party.dto.kafka;
 
+import com.web.study.party.dto.response.group.task.AttachmentResponse;
 import com.web.study.party.dto.response.user.UserBrief;
 import com.web.study.party.entities.enums.group.MemberRole;
 import com.web.study.party.entities.enums.group.MessageType;
 import java.time.Instant;
+import java.util.List;
 
 public record ChatMessagePayload(
         Long messageId,       // ID tin nhắn trong DB (quan trọng để sắp xếp/reply)
@@ -13,5 +15,6 @@ public record ChatMessagePayload(
         String content,
         MessageType type,
         Instant createdAt,
-        boolean isGroup       // Cờ đánh dấu để Consumer biết đường routing
+        boolean isGroup,       // Cờ đánh dấu để Consumer biết đường routing
+        List<AttachmentResponse> attachments
 ) {}

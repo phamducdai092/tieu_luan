@@ -42,6 +42,25 @@ public class GroupController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/discover")
+    public ResponseEntity<ApiResponse<List<GroupCardResponse>>> getDiscoverGroups(
+            @AuthenticationPrincipal(expression = "user") Users user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String topic,
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest req
+    ) {
+        Pageable pageable = Paging.parsePageable(page, size, sort);
+
+        // Gọi service
+        var result = groupService.getDiscoverGroups(user.getId(), pageable);
+
+        // Dùng lại Filter có sẵn để đóng gói response
+        return GroupFilter.filterGroupCardResponsePageable(topic, keyword, req, result);
+    }
+
     @GetMapping("/joined")
     public ResponseEntity<ApiResponse<List<GroupCardResponse>>> getJoinedGroups(
             @AuthenticationPrincipal(expression = "user") Users user,

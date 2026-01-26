@@ -9,6 +9,8 @@ import ScrollToTop from "@/components/common/ScrollToTop";
 import BackToTop from "@/components/common/BackToTop";
 import {runBootstrap} from "@/bootstrap/bootstrap.ts";
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
+import {GlobalSocketProvider} from "@/context/GlobalSocketContext.tsx";
+import {PresenceListener} from "@/components/features/listeners/PresenceListener.tsx";
 
 function AppRoutes() {
     return useRoutes(routes);
@@ -39,10 +41,13 @@ export default function App() {
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
                 <QueryClientProvider client={queryClient}>
                     <AppGate>
-                        <ScrollToTop/>
-                        <AppRoutes/>
-                        <Toaster/>
-                        <BackToTop/>
+                        <GlobalSocketProvider>
+                            <ScrollToTop/>
+                            <AppRoutes/>
+                            <Toaster/>
+                            <BackToTop/>
+                            <PresenceListener/>
+                        </GlobalSocketProvider>
                     </AppGate>
                 </QueryClientProvider>
             </ThemeProvider>

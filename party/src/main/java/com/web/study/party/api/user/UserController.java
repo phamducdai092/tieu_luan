@@ -1,17 +1,21 @@
 package com.web.study.party.api.user;
 
-import com.web.study.party.config.CustomUserDetails;
 import com.web.study.party.dto.mapper.user.UserMapper;
 import com.web.study.party.dto.request.user.UserInformationUpdateRequest;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.auth.AuthResponse;
 import com.web.study.party.dto.response.user.UserInformationResponse;
+import com.web.study.party.dto.response.user.UserSearchResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
 import com.web.study.party.services.user.UserServiceImp;
+import com.web.study.party.utils.Paging;
+import com.web.study.party.utils.filters.UserFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,21 +29,34 @@ public class UserController {
     private final UserServiceImp userService;
     private final UserMapper userMapper;
 
-    @GetMapping("/admin/users")
-    public ResponseEntity<ApiResponse<List<Users>>> getAllUsers(HttpServletRequest req,
-                                                                @RequestParam String username) {
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "displayName:asc") String sort,
+            HttpServletRequest req
+    ) {
+        Pageable pageable = Paging.parsePageable(page, size, sort);
+        Page<UserSearchResponse> result = userService.searchUsers(keyword, pageable);
 
-        List<Users> users = userService.getAllUsersByName(username);
+        return UserFilter.filterUsers(req, result);
+    }
 
-        return ResponseEntity.ok(
-                ApiResponse.<List<Users>>builder()
-                        .code(CodeStatus.SUCCESS.name())
-                        .status(CodeStatus.SUCCESS.getHttpCode())
-                        .message("Users retrieved successfully")
-                        .path(req.getRequestURI())
-                        .data(users)
-                        .build()
-        );
+    @GetMapping("/{userId}")
+    public ResponseEntity<ApiResponse<UserInformationResponse>> getUserProfile(
+            @PathVariable Long userId,
+            HttpServletRequest req
+    ) {
+        UserInformationResponse user = userService.getUserById(userId);
+
+        return ResponseEntity.ok(ApiResponse.<UserInformationResponse>builder()
+                .status(CodeStatus.SUCCESS.getHttpCode())
+                .code("SUCCESS")
+                .message("Lấy thông tin người dùng thành công")
+                .data(user)
+                .path(req.getRequestURI())
+                .build());
     }
 
     @GetMapping("/me")
@@ -68,7 +85,7 @@ public class UserController {
 
     @PutMapping("/me")
     public ResponseEntity<ApiResponse<UserInformationResponse>> updateUserInformation(@AuthenticationPrincipal(expression = "user")
-                                                                                            Users user, @Valid @RequestBody UserInformationUpdateRequest request, HttpServletRequest httpRequest) {
+                                                                                      Users user, @Valid @RequestBody UserInformationUpdateRequest request, HttpServletRequest httpRequest) {
 
         UserInformationResponse userInformationUpdateResponse = userService.updateUser(user.getId(), request);
 

@@ -10,8 +10,7 @@ import {
     Home,
     BookOpen,
     Command,
-    Settings2,
-    LifeBuoy, Send, Frame, PieChart, Map, User, School, Files
+    LifeBuoy, Send, Frame, PieChart, Map, User, School, Files, Bell
 } from "lucide-react";
 import {NavMain} from "@/components/common/sidebar/nav-main.tsx";
 import {NavUser} from "@/components/common/sidebar/nav-user.tsx";
@@ -50,28 +49,10 @@ const data = {
             match: "/docs/*"
         },
         {
-            title: "Cài đặt",
-            url: "/settings",
-            icon: Settings2,
-            match: "/settings/*",
-            items: [
-                {
-                    title: "Thông báo",
-                    url: "/settings/notifications",
-                },
-                {
-                    title: "Team",
-                    url: "#",
-                },
-                {
-                    title: "Billing",
-                    url: "#",
-                },
-                {
-                    title: "Limits",
-                    url: "#",
-                },
-            ],
+            title: "Thông báo",
+            icon: Bell,
+            url:"/notifications"
+
         },
     ],
     navSecondary: [

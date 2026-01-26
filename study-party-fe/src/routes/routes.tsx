@@ -16,10 +16,12 @@ import RoomPage from "@/pages/group/RoomPage.tsx";
 import {FlashcardsPage} from "@/pages/flashcard/FlashCardsPage.tsx";
 import {DocumentsPage} from "@/pages/document/DocumentsPage.tsx";
 import {lazy} from "react";
+import AdminUsers from "@/components/features/admin/AdminUser.tsx";
+import AdminGroups from "@/components/features/admin/AdminGroups.tsx";
+import AdminFiles from "@/components/features/admin/AdminFiles.tsx";
+import PublicProfilePage from "@/pages/user/PublicProfilePage.tsx";
+import GroupListPage from "@/pages/group/RoomListPage.tsx";
 
-const ProfilePage = lazy(() => import("../pages/settings/ProfilePage.tsx"));
-const AccountPage = lazy(() => import("../pages/settings/AccountPage.tsx"));
-const SecurityPage = lazy(() => import("../pages/settings/SecurityPage.tsx"));
 const NotificationsPage = lazy(() => import("../pages/settings/NotificationPage.tsx"));
 // const PrivacyPage = lazy(()=>import("../pages/settings/"));
 // const ConnectionsPage = lazy(()=>import("./ConnectionsPage"));
@@ -43,19 +45,9 @@ export const routes: RouteObject[] = [
                     {path: "rooms/:slug", element: <RoomDetail/>},
                     {path: "flashcard", element: <FlashcardsPage/>},
                     {path: "docs", element: <DocumentsPage/>},
-                    {
-                        path: "/settings",
-                        // element: <SettingsLayout/>,
-                        children: [
-                            {index: true, element: <ProfilePage/>},
-                            {path: "account", element: <AccountPage/>},
-                            {path: "security", element: <SecurityPage/>},
-                            {path: "notifications", element: <NotificationsPage/>},
-                            // { path: "privacy", element: <PrivacyPage/> },
-                            // { path: "connections", element: <ConnectionsPage/> },
-                            // { path: "appearance", element: <AppearancePage/> },
-                        ],
-                    },
+                    {path: "notifications", element: <NotificationsPage/>},
+                    {path: "user/:userId", element: <PublicProfilePage/>},
+                    {path: "groups/list/:type", element: <GroupListPage/>}
                 ],
             },
         ],
@@ -69,7 +61,10 @@ export const routes: RouteObject[] = [
                 element: <AdminRoute/>,
                 children: [
                     {index: true, element: <AdminDashboard/>},
-                    // … admin pages
+                    {path: "dashboard", element: <AdminDashboard/>},
+                    {path: "users", element: <AdminUsers/>},
+                    {path: "groups", element: <AdminGroups/>},
+                    {path: "files", element: <AdminFiles/>},
                 ],
             },
         ],

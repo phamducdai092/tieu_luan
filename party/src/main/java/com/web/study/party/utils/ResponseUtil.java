@@ -1,8 +1,8 @@
 package com.web.study.party.utils;
 
 import com.web.study.party.dto.response.ApiResponse;
-import com.web.study.party.dto.response.CursorMeta;
-import com.web.study.party.dto.response.PageMeta;
+import com.web.study.party.dto.page.CursorMeta;
+import com.web.study.party.dto.page.PageMeta;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 

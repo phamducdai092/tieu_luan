@@ -25,10 +25,19 @@ public interface GroupMemberRepo extends JpaRepository<GroupMembers, Long> {
   Optional<GroupMembers> findByGroupAndUserId(StudyGroups group, Long userId);
 
   Page<GroupMembers> findByGroupIdAndState(Long gid, MemberState state, Pageable p);
+  List<GroupMembers> findByGroupIdAndState(Long gid, MemberState state);
+
+  List<GroupMembers> findAllByGroupId(Long groupId);
 
   @Query("SELECT m.user FROM GroupMembers m WHERE m.group.id = :groupId AND (m.role = 'MOD' OR m.role = 'OWNER')")
   List<Users> findModsAndOwner(@Param("groupId") Long groupId);
 
   @Query("SELECT m.user FROM GroupMembers m WHERE m.group.slug = :slug AND m.role = 'MOD'")
   List<Users> findModsBySlug(String slug);
+
+  @Query("SELECT m.user FROM GroupMembers m WHERE m.group.id = :groupId AND m.state = 'APPROVED'")
+  List<Users> findMembersByGroupId(Long groupId);
+
+  long countByGroupIdAndUserIdIn(Long groupId, List<Long> userIds);
+
 }

@@ -5,14 +5,19 @@ import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.group.InvitationResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
+import com.web.study.party.entities.enums.group.RequestStatus;
 import com.web.study.party.services.group.InvitationService;
+import com.web.study.party.utils.Paging;
+import com.web.study.party.utils.filters.InvitationFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/groups/{slug}/invitations")
@@ -38,16 +43,22 @@ public class InvitationController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<InvitationResponse>>> getPendingInvitations(
             @PathVariable String slug,
-            @AuthenticationPrincipal(expression = "user") Users owner) {
-        List<InvitationResponse> invitations = invitationService.getPendingInvitationsForGroup(slug, owner.getId());
-        return ResponseEntity.ok(ApiResponse.<List<InvitationResponse>>builder()
-                .status(CodeStatus.SUCCESS.getHttpCode())
-                .message("Pending invitations retrieved successfully")
-                .data(invitations)
-                .build());
+            @AuthenticationPrincipal(expression = "user") Users owner,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt:desc") String sort,
+            @RequestParam(required = false) RequestStatus status,
+            @RequestParam(required = false) String keyword,
+            HttpServletRequest req) {
+
+        Pageable pageable = Paging.parsePageable(page, size, sort);
+
+        Page<InvitationResponse> invitationPage = invitationService.getPendingInvitationsForGroup(slug, owner.getId(), status, keyword, pageable);
+
+        return InvitationFilter.filterInvitationResponsePageable(status, keyword, req, invitationPage);
     }
 
-    @PutMapping("/{invitationId}")
+    @DeleteMapping("/{invitationId}")
     public ResponseEntity<ApiResponse<Void>> revokeInvitation(
             @PathVariable String slug,
             @PathVariable Long invitationId,

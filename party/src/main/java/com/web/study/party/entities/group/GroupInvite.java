@@ -40,8 +40,11 @@ public class GroupInvite {
     private String token; // dùng cho link invite
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     @Builder.Default
     private RequestStatus status = RequestStatus.PENDING; // PENDING, ACCEPTED, DECLINED
 
     private Instant expiresAt;
+
+    private Instant createdAt;
 }

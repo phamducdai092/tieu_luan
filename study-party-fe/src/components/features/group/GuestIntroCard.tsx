@@ -10,7 +10,6 @@ function GuestIntroCard({
                             topicItem,
                             privacyItem,
                             joinItem,
-                            onJoinNow,
                             onRequestJoin,
                         }: {
     name: string;
@@ -18,7 +17,6 @@ function GuestIntroCard({
     topicItem: EnumItem | null;
     privacyItem: EnumItem | null;
     joinItem: EnumItem | null;
-    onJoinNow: () => Promise<void>;
     onRequestJoin: () => Promise<void>;
 }) {
     const policyCode = (joinItem?.code || "").toString().toUpperCase();
@@ -49,7 +47,7 @@ function GuestIntroCard({
 
                 <div className="flex flex-wrap justify-center gap-2">
                     {policyCode.includes("OPEN") && (
-                        <Button onClick={onJoinNow} className="gap-2">
+                        <Button onClick={onRequestJoin} className="gap-2">
                             <UserPlus className="h-4 w-4"/> Tham gia ngay
                         </Button>
                     )}

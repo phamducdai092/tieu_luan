@@ -2,7 +2,7 @@ import axios from "axios";
 import type {CloudinaryUploadResult, UploadOptions} from "@/types/cloudinary.type.ts";
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME!;
-const DEFAULT_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET!; // unsigned preset
+const DEFAULT_UPLOAD_PRES1QET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET!; // unsigned preset
 
 export async function uploadToCloudinary(
     fileOrUrl: File | Blob | string,       // nhận File/Blob hoặc URL từ xa

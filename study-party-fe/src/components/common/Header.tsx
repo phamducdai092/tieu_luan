@@ -1,7 +1,7 @@
 import {Link, useNavigate} from "react-router-dom";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {ToggleMode} from "@/components/features/ToggleMode.tsx";
-import {Bell, Search, Home, User, School, BookOpen, Files, Settings, LogOut, Shield} from "lucide-react";
+import {Bell, Search, Home, User, School, LogOut, Shield} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -20,12 +20,10 @@ import {useEnumStore} from "@/store/enum.store.ts";
 import CreateRoomDialog from "@/components/features/group/CreateRoomDialog.tsx";
 
 const NAV_ITEMS = [
-    {to: "/", label: "Home", icon: Home},
-    {to: "/me", label: "Profile", icon: User},
-    {to: "/rooms", label: "Phòng học", icon: School},
-    {to: "/flashcard", label: "Flashcard", icon: BookOpen, disabled: true},
-    {to: "/docs", label: "Tài liệu", icon: Files, disabled: true},
-    {to: "/settings", label: "Settings", icon: Settings, disabled: true},
+    {to: "/", label: "Home", icon: Home, disabled: false},
+    {to: "/me", label: "Profile", icon: User, disabled: false},
+    {to: "/rooms", label: "Phòng học", icon: School, disabled: false},
+    {to: "/notifications", label: "Settings", icon: Bell, disabled: false},
 ];
 
 export default function Header() {
@@ -61,16 +59,16 @@ export default function Header() {
                     <div className="ms-auto flex items-center gap-2">
                         <CreateRoomDialog groupTopics={groupEnum}/>
 
-                        <Button size="icon" variant="ghost" className="relative" aria-label="Thông báo" type="button">
-                            <Bell className="h-5 w-5"/>
-                            <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-destructive"/>
-                        </Button>
-
                         <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="rounded-full p-0" type="button">
-                                    <AvatarDisplay src={user!.avatarUrl} fallback={user!.displayName}
-                                                   alt={user!.displayName} size={46} />
+                                    <AvatarDisplay src={user!.avatarUrl}
+                                                   fallback={user!.displayName}
+                                                   alt={user!.displayName}
+                                                   size={46}
+                                                   userId={user!.id}
+                                                   showStatus={true}
+                                    />
                                 </Button>
                             </DropdownMenuTrigger>
 
@@ -96,7 +94,6 @@ export default function Header() {
                                         asChild
                                         disabled={i.disabled}
                                         className="cursor-pointer py-2 w-full"
-                                        /* tránh “select” làm cuộn nếu item disabled */
                                         onSelect={(e) => i.disabled && e.preventDefault()}
                                     >
                                         <Link to={i.to} className="flex items-center gap-2">

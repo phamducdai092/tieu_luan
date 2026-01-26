@@ -13,8 +13,8 @@ import com.web.study.party.entities.enums.group.MemberRole;
 import com.web.study.party.entities.enums.group.MemberState;
 import com.web.study.party.entities.group.GroupMembers;
 import com.web.study.party.entities.group.StudyGroups;
-import com.web.study.party.exeption.BusinessException;
-import com.web.study.party.exeption.ResourceNotFoundException;
+import com.web.study.party.exception.BusinessException;
+import com.web.study.party.exception.ResourceNotFoundException;
 import com.web.study.party.repositories.UserRepo;
 import com.web.study.party.repositories.group.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
@@ -66,6 +66,12 @@ public class GroupServiceImp implements GroupService {
     public Page<GroupCardResponse> getOwnedGroups(Long userId, Pageable pageable) {
         var page = groupRepo.findOwnedGroupCards(userId, pageable);
         return page.map(groupMapper::toCardResponse);
+    }
+
+    @Override
+    public Page<GroupCardResponse> getDiscoverGroups(Long userId, Pageable pageable) {
+        return groupRepo.findDiscoverGroupCards(userId, pageable)
+                .map(groupMapper::toCardResponse);
     }
 
     @Override
@@ -167,7 +173,12 @@ public class GroupServiceImp implements GroupService {
         StudyGroups g = groupRepo.findStudyGroupBySlug(slug).orElseThrow(() -> BusinessException.notFound("Group not found"));
         Long gid = g.getId();
         perm.requireOwner(uid, gid);
-        memberRepo.deleteAll(memberRepo.findAllById(List.of())); // rút gọn
-        groupRepo.deleteById(gid);
+        List<GroupMembers> gms = memberRepo.findAllByGroupId(gid);
+        for(GroupMembers gm : gms ) {
+            gm.setState(MemberState.LEFT);
+        }
+        groupMemberRepo.saveAll(gms);
+        g.setDeleted(true);
+        groupRepo.save(g);
     }
 }

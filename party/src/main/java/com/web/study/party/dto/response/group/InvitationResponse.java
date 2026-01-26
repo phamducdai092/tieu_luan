@@ -9,6 +9,10 @@ import java.time.Instant;
 @Data
 public class InvitationResponse {
     private Long id;
+    private String token;
+    private Long groupId;
+    private String groupName;
+    private String groupSlug;
     private UserBrief inviter;
     private UserBrief invitee;
     private RequestStatus status;

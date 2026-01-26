@@ -14,6 +14,7 @@ public record GroupResponse(
         Integer maxMembers,
         Integer memberCount,
         Long ownerId,
-        Instant createdAt
+        Instant createdAt,
+        Boolean isDeleted
 ) {
 }

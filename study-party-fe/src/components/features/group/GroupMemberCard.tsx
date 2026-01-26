@@ -55,7 +55,13 @@ export function GroupMemberCard({memberResponse, onKickMember, onChangeRole}: Gr
             <div className={cn(
                 "flex items-center gap-3 overflow-hidden"
             )}>
-                <AvatarDisplay src={member.avatarUrl} fallback={member.displayName} size={48}/>
+                <AvatarDisplay
+                    src={member.avatarUrl}
+                    fallback={member.displayName}
+                    size={48}
+                    userId={member.id}
+                    showStatus={true}
+                />
 
                 <div className="flex flex-col min-w-0">
                     <span className="self-start text-sm font-semibold truncate max-w-[150px] sm:max-w-[200px]">

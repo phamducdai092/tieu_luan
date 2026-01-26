@@ -38,8 +38,12 @@ export default function UserProfilePage() {
                         />
                     </div>
                     <div className="flex items-end gap-6 px-8 -mt-2 pb-6 relative z-10">
-                        <AvatarDisplay src={user?.avatarUrl} fallback={user?.displayName}
-                                       alt={user?.avatarUrl || "User Avatar"} size={124}/>
+                        <AvatarDisplay
+                            src={user?.avatarUrl}
+                            fallback={user?.displayName}
+                            alt={user?.avatarUrl || "User Avatar"}
+                            size={124}
+                        />
                         <div className="pb-2 flex-1">
                             <div className="flex items-center gap-4 mb-3">
                                 <h1 className="text-3xl font-bold">{user?.displayName || user?.email || "Chào bạn"}</h1>

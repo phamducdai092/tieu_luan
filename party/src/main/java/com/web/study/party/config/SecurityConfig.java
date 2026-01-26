@@ -24,6 +24,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final String[] PUBLIC_URLS = {
+            "/user/**",
             "/auth/**",
             "/account/**",
             "/enums/**",
@@ -40,6 +41,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/user/me").authenticated()
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
@@ -62,7 +64,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         var cfg = new CorsConfiguration();
         cfg.setAllowCredentials(true);
-        cfg.setAllowedOrigins(List.of("http://localhost:5173", "https://your-fe-domain.com"));
+//        cfg.setAllowedOrigins(List.of("http://localhost:5173", "https://your-fe-domain.com", "http://192.168.1.5:5173"));
+        cfg.setAllowedOriginPatterns(List.of("*"));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization","Content-Type"));
         cfg.setExposedHeaders(List.of()); // không cần expose cookie

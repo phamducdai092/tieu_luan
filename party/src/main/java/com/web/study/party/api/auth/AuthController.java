@@ -1,13 +1,18 @@
 package com.web.study.party.api.auth;
 
+import com.web.study.party.dto.mapper.user.UserMapper;
 import com.web.study.party.dto.request.user.LoginRequest;
 import com.web.study.party.dto.request.user.RegisterRequest;
+import com.web.study.party.dto.request.user.UserInformationUpdateRequest;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.TokenResponse;
 import com.web.study.party.dto.response.auth.AuthResponse;
+import com.web.study.party.dto.response.user.UserInformationResponse;
+import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.CodeStatus;
 import com.web.study.party.jwt.JwtProperties;
 import com.web.study.party.services.auth.AuthService;
+import com.web.study.party.services.user.UserServiceImp;
 import com.web.study.party.utils.CookieUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -16,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.WebUtils;
 
@@ -28,17 +34,20 @@ public class AuthController {
     private final JwtProperties jwtProps;
     private AuthResponse authResponse;
 
+    private final UserServiceImp userService;
+    private final UserMapper userMapper;
+
     @Value("${security.jwt.refresh-cookie-name:refresh_token}")
     private String refreshCookieName;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest req, HttpServletRequest httpRequest) {
-        authResponse = authService.register(req);
+    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest req, HttpServletRequest httpRequest) {
+        authService.register(req);
 
-        ApiResponse<AuthResponse> response = ApiResponse.<AuthResponse>builder()
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
                 .status(CodeStatus.SUCCESS.getHttpCode())
                 .code("SUCCESS")
-                .data(authResponse)
+                .data(null)
                 .path(httpRequest.getRequestURI())
                 .message("Đã đăng ký thành công. Vui lòng kiểm tra email để nhận mã xác thực tài khoản.")
                 .build();

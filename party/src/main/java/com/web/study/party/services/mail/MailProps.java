@@ -8,6 +8,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "app.mail")
 public class MailProps {
-    private String from = "StudyParty <no-reply@local.test>";
+    private String from = "StudyParty <phducdai47@gmail.com>";
     private boolean enabled = true;
 }

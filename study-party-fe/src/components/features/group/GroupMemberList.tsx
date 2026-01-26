@@ -1,10 +1,9 @@
-import {keepPreviousData, useQuery, useQueryClient} from "@tanstack/react-query";
+import {useQueryClient} from "@tanstack/react-query";
 import {
-    getGroupMembers,
     kickGroupMember,
     setMemberRole,
 } from "@/services/group.member.service.ts";
-import {Loader2} from "lucide-react";
+import {Loader2, Search} from "lucide-react";
 import {toast} from "sonner";
 import {useState} from "react";
 import type {MemberResponse} from "@/types/group/member.type.ts";
@@ -12,6 +11,9 @@ import {AppPagination} from "@/components/common/AppPagination";
 import type {PagingResponse} from "@/types/paging.type.ts";
 import {GroupMemberCard} from "@/components/features/group/GroupMemberCard.tsx";
 import {type MemberRole} from "@/types/enum/group.enum.ts";
+import {groupKeys, useGroupMembers} from "@/hooks/useGroupMember.ts";
+import {ScrollArea} from "@/components/ui/scroll-area.tsx";
+import {Input} from "@/components/ui/input.tsx";
 
 // Định nghĩa kiểu dữ liệu trả về của Query để code gợi ý cho sướng
 type GroupMemberQueryResult = {
@@ -28,28 +30,9 @@ export function GroupMemberList({groupId, canEdit}: { groupId: number, canEdit: 
     const queryClient = useQueryClient();
 
     // 2. Cấu hình useQuery chuẩn cho Pagination
-    const {
-        data, // Data lúc này là object { items, meta } chứ không phải mảng
-        isLoading,
-        isPlaceholderData // Biến này true khi đang fetch trang mới mà vẫn hiện data cũ
-    } = useQuery({
-        // 👇 QUAN TRỌNG: Thêm currentPage vào key. Page đổi -> Key đổi -> Fetch lại
-        queryKey: ["group-members", groupId, currentPage],
-
-        queryFn: async () => {
-            // Gọi API có truyền page
-            const res = await getGroupMembers(groupId, {page: currentPage, size: 5});
-            // 👇 Trả về cả cụm để component dùng
-            return {
-                items: res.data || [],
-                meta: res.meta
-            };
-        },
-
-        // 👇 Giữ data trang cũ hiển thị trong lúc đang tải trang mới -> UI mượt hơn hẳn
-        placeholderData: keepPreviousData,
-
-        staleTime: 1000 * 60 * 5,
+    const {data, isLoading, isPlaceholderData} = useGroupMembers(groupId, {
+        page: currentPage,
+        size: 5
     });
 
     // Tách data ra cho dễ dùng
@@ -65,9 +48,8 @@ export function GroupMemberList({groupId, canEdit}: { groupId: number, canEdit: 
 
             // Update Cache: Lưu ý cấu trúc cache giờ đã đổi thành { items, meta }
             queryClient.setQueryData(
-                ["group-members", groupId, currentPage], // Nhớ đúng key có page
-                (old: GroupMemberQueryResult | undefined) => {
-                    if (!old) return old;
+                groupKeys.list(groupId, currentPage, 5),
+                (old: any) => {
                     return {
                         ...old, // Giữ nguyên meta
                         items: old.items.filter(m => m.member.id !== memberId) // Lọc mảng items
@@ -123,36 +105,44 @@ export function GroupMemberList({groupId, canEdit}: { groupId: number, canEdit: 
     }
 
     return (
-        <div className="space-y-4">
-            {/* List Members */}
-            <div
-                className={isPlaceholderData ? "opacity-50" : "flex flex-col gap-y-2"}> {/* Làm mờ nhẹ khi đang load trang mới */}
-                {members.map((mem) => (
-                    canEdit ?
-                        (
-                            <GroupMemberCard
-                                memberResponse={mem}
-                                key={mem.member.id}
-                                onChangeRole={(memId, roleMoi) => handleChangeMemberRole(memId, roleMoi)}
-                                onKickMember={() => handleKickMember(mem.member.id)}
-                            />
-                        ) : (
-                            <GroupMemberCard
-                                memberResponse={mem}
-                                key={mem.member.id}
-                            />
-                        )
-                ))}
+        <div className="h-full flex flex-col gap-2 overflow-hidden">
+            <div className="relative shrink-0 px-1"> {/* Thêm px-1 để outline input không bị cắt */}
+                <Search
+                    className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
+                <Input placeholder="Tìm thành viên..." className="pl-8 bg-background"/>
             </div>
 
+            <ScrollArea className="flex-1 min-h-0 w-full pr-3 -mr-3">
+                <div
+                    className={isPlaceholderData ? "opacity-50 space-y-2" : "flex flex-col gap-y-2 space-y-2"}>
+                    {members.map((mem) => (
+                        canEdit ?
+                            (
+                                <GroupMemberCard
+                                    memberResponse={mem}
+                                    key={mem.member.id}
+                                    onChangeRole={(memId, roleMoi) => handleChangeMemberRole(memId, roleMoi)}
+                                    onKickMember={() => handleKickMember(mem.member.id)}
+                                />
+                            ) : (
+                                <GroupMemberCard
+                                    memberResponse={mem}
+                                    key={mem.member.id}
+                                />
+                            )
+                    ))}
+                </div>
+            </ScrollArea>
             {/* Component Phân trang */}
             {paging && (
-                <AppPagination
-                    page={paging.page}
-                    totalPages={paging.totalPages}
-                    totalItems={paging.totalItems}
-                    onPageChange={setCurrentPage} // Update state page -> Trigger useQuery
-                />
+                <div className="pt-2 border-t mt-auto shrink-0">
+                    <AppPagination
+                        page={paging.page}
+                        totalPages={paging.totalPages}
+                        totalItems={paging.totalItems}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
             )}
         </div>
     );

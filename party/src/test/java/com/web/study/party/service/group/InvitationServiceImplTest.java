@@ -6,7 +6,7 @@ import com.web.study.party.entities.group.GroupMembers;
 import com.web.study.party.entities.group.StudyGroups;
 import com.web.study.party.entities.enums.group.RequestStatus;
 import com.web.study.party.entities.enums.group.MemberRole;
-import com.web.study.party.exeption.BadRequestException;
+import com.web.study.party.exception.BadRequestException;
 import com.web.study.party.repositories.UserRepo;
 import com.web.study.party.repositories.group.GroupInviteRepo;
 import com.web.study.party.repositories.group.GroupMemberRepo;

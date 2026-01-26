@@ -1,6 +1,7 @@
 package com.web.study.party.dto.mapper.group;
 
 import com.web.study.party.dto.request.group.GroupCreateRequest;
+import com.web.study.party.dto.response.admin.AdminGroupResponse;
 import com.web.study.party.dto.response.group.GroupCardResponse;
 import com.web.study.party.dto.response.group.GroupResponse;
 import com.web.study.party.entities.group.StudyGroups;
@@ -21,6 +22,8 @@ public interface GroupMapper {
     GroupResponse toResponse(StudyGroups g);
 
     GroupCardResponse toCardResponse(GroupCardProjection g);
+
+    AdminGroupResponse toAdminGroupResponse(StudyGroups g);
 
     // update partial
     void update(@MappingTarget StudyGroups g, GroupCreateRequest req);

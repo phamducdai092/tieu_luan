@@ -12,7 +12,9 @@ export default function AdminRoute() {
     const status = useAuthStore((s) => s.meStatus);   // 'idle' | 'loading' | 'success' | 'error'
     const loadMe = useAuthStore((s) => s.loadMeOnce);
 
-    // Kick off loadMe khi cần (không làm trong render)
+    const warned = useRef(false);
+
+    // Kick off loadMe khi cần
     useEffect(() => {
         if (!hydrated) return;
         if (token && !user && (status === "idle" || status === "error")) {
@@ -20,10 +22,23 @@ export default function AdminRoute() {
         }
     }, [hydrated, token, user, status, loadMe]);
 
+    // 👇 MOVE LÊN ĐÂY LUÔN
+    useEffect(() => {
+        // Chỉ toast khi đã có user và role không phải ADMIN
+        if (user && user.role !== "ADMIN" && !warned.current) {
+            warned.current = true;
+            toast.error("Bạn không có quyền truy cập trang này");
+        }
+    }, [user]);
+
+    // --- Bắt đầu các lệnh Return ---
+
     if (!hydrated) return null;
+
     if (!token) {
         return <Navigate to="/login" replace state={{from: location}}/>;
     }
+
     if (status === "loading" || (!user && (status === "idle" || status === "error"))) {
         return (
             <div className="min-h-screen grid place-items-center">
@@ -34,15 +49,8 @@ export default function AdminRoute() {
             </div>
         );
     }
-    // Tới đây chắc chắn có user
-    const warned = useRef(false);
-    useEffect(() => {
-        if (user && user.role !== "ADMIN" && !warned.current) {
-            warned.current = true;
-            toast.error("Bạn không có quyền truy cập trang này");
-        }
-    }, [user]);
 
+    // Tới đây chắc chắn có user
     if (user && user.role !== "ADMIN") {
         return <Navigate to="/" replace/>;
     }

@@ -1,68 +1,72 @@
-import {useCallback, useEffect, useState} from "react";
-import {toast} from "sonner";
-import type {IMessage} from "@/types/chat/message.type.ts";
-import type {SendMessageRequest} from "@/types/chat/chat.request.ts";
-import {sendGroupMessage} from "@/services/chat.service.ts";
-import SockJS from "sockjs-client";
-import {Client} from "@stomp/stompjs";
-import {SOCKET_EVENTS, SOCKET_TOPICS, type SocketMessage} from "@/config/socket.config.ts";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { type IMessage } from "@/types/chat/message.type.ts";
+import type { SendMessageRequest } from "@/types/chat/chat.request.ts";
+import { sendGroupMessage } from "@/services/chat.service.ts";
+import { SOCKET_EVENTS, SOCKET_TOPICS, type SocketMessage } from "@/config/socket.config.ts";
+import {useGlobalSocket} from "@/context/GlobalSocketContext.tsx";
 
-
-export function useRoomChatMessage(roomId: number, token: string) {
+export function useRoomChatMessage(roomId: number) {
+    const { client, isConnected } = useGlobalSocket();
     const [groupMessages, setGroupMessages] = useState<IMessage[]>([]);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const sendMessage = useCallback(async (roomId: number, messageRequest: SendMessageRequest) => {
+    const sendMessage = useCallback(async (roomId: number, messageRequest: SendMessageRequest, files?: File[]) => {
         try {
-            await sendGroupMessage(roomId, messageRequest);
+            await sendGroupMessage(roomId, messageRequest, files);
         } catch (err: any) {
-            setError(err?.response?.data?.message || "Không thể gửi tin nhắn.");
-            toast.error("Không thể gửi tin nhắn.");
+            console.error(err);
+            const errMsg = err?.response?.data?.message || "Không thể gửi tin nhắn.";
+            setError(errMsg);
+            toast.error(errMsg);
+            throw err;
+        }
+    }, []);
+
+    // Logic Subscribe Topic Chat
+    useEffect(() => {
+        // 👇 FIX 1: Thêm check client.connected
+        if (!client || !isConnected || !roomId || !client.connected) return;
+
+        console.log(`👂 [Chat] Subscribing to topic: /topic/chat/${roomId}`);
+
+        let subscription: any = null;
+
+        try {
+            // 👇 FIX 2: Bọc try-catch
+            subscription = client.subscribe(SOCKET_TOPICS.chatRoom(roomId), (message) => {
+                try {
+                    const msgBody = JSON.parse(message.body) as SocketMessage;
+                    if (msgBody.type === SOCKET_EVENTS.NEW_GROUP_MESSAGE) {
+                        const payload = msgBody.payload;
+                        setGroupMessages(prev => {
+                            const isExist = prev.some(m => (m.messageId && m.messageId === payload.messageId));
+                            if (isExist) return prev;
+                            return [...prev, payload];
+                        });
+                    }
+                } catch (e) {
+                    console.error("Socket parse error:", e);
+                }
+            });
+        } catch (error) {
+            console.error("Chat subscription failed:", error);
         }
 
-    }, [roomId, token]);
-
-    useEffect(() => {
-        setGroupMessages([]); // Reset messages when roomId changes
-        setError(null);
-
-        const socket = new SockJS(import.meta.env.VITE_API_URL + "/ws");
-        const stompClient = new Client({
-            webSocketFactory: () => socket,
-            onConnect: () => {
-                console.log("💬 Connected to Room Chat:", roomId);
-
-                // Subscribe to group chat topic
-                stompClient.subscribe(SOCKET_TOPICS.chatRoom(roomId), (message) => {
-                    const msgBody = JSON.parse(message.body) as SocketMessage;
-
-                    if (msgBody.type === SOCKET_EVENTS.NEW_GROUP_MESSAGE) {
-                        setGroupMessages(prevMessages => [...prevMessages, msgBody.payload]);
-                        toast.success("Tin nhắn mới vừa đến!");
-                    }
-                });
-            },
-            onStompError: (frame) => {
-                console.error("Lỗi STOMP: " + frame.headers["message"]);
-            },
-        });
-
-        stompClient.activate();
-
         return () => {
-            if (stompClient.active) {
-                stompClient.deactivate();
-                console.log("🔌 WebSocket Disconnected");
+            if (subscription) {
+                try {
+                    console.log(`🔕 [Chat] Unsubscribing topic...`);
+                    subscription.unsubscribe();
+                } catch (e) {}
             }
         };
 
-    }, [roomId, token]);
+    }, [client, isConnected, roomId]);
 
     return {
         groupMessages,
-        isLoadingMore,
         error,
         sendMessage,
-    }
+    };
 }

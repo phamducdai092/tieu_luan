@@ -19,6 +19,7 @@ public interface GroupService {
 
     Page<GroupCardResponse> getJoinedGroups(Long userId, Pageable pageable);
     Page<GroupCardResponse> getOwnedGroups(Long userId, Pageable pageable);
+    Page<GroupCardResponse> getDiscoverGroups(Long userId, Pageable pageable);
 
     GroupDetailResponse getDetailBySlug(String slug, Users currentUser);
 

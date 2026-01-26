@@ -1,7 +1,6 @@
 package com.web.study.party.entities.group;
 
 import com.web.study.party.entities.message.GroupMessages;
-import com.web.study.party.entities.message.PrivateMessage;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.group.GroupPrivacy;
 import com.web.study.party.entities.enums.group.GroupTopic;
@@ -53,5 +52,12 @@ public class StudyGroups {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "group", cascade = CascadeType.ALL)
     private List<GroupMessages> messages;
+
+    @Builder.Default
+    @Column(columnDefinition = "boolean default true")
+    private boolean active = true;
+
+    @Builder.Default
+    private boolean deleted = false;
 }
 

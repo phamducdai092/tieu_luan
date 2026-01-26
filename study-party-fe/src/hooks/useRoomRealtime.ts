@@ -38,9 +38,22 @@ export function useRoomRealtime(slug?: string) {
     useEffect(() => {
         if (!slug) return;
 
-        const socket = new SockJS(import.meta.env.VITE_API_URL + "/ws");
+        // CẤU HÌNH LẠI CLIENT
         const stompClient = new Client({
-            webSocketFactory: () => socket,
+            // 1. Dùng Relative URL để ăn theo Proxy của Vite (fix lỗi CORS và Port)
+            // 2. Nhét new SockJS vào trong hàm arrow function => Đây là Lazy Initialization
+            webSocketFactory: () => new SockJS("/api/ws"),
+
+            // Tắt debug nếu thấy rác console quá, hoặc để log cũng được
+            debug: (str) => console.log(str),
+
+            // Thời gian chờ kết nối lại (ms)
+            reconnectDelay: 5000,
+
+            // Thời gian gửi heartbeat để giữ kết nối không bị đứt (quan trọng)
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+
             onConnect: () => {
                 console.log("🔌 WebSocket Connected!");
                 stompClient.subscribe(SOCKET_TOPICS.room(slug), (message) => {
@@ -58,15 +71,20 @@ export function useRoomRealtime(slug?: string) {
             onStompError: (frame) => {
                 console.error("Lỗi STOMP: " + frame.headers["message"]);
             },
+            // Thêm cái này để debug lỗi đóng kết nối
+            onWebSocketClose: () => {
+                console.log("WebSocket đã đóng.");
+            }
         });
 
+        // Kích hoạt
         stompClient.activate();
 
+        // CLEANUP FUNCTION - CỰC KỲ QUAN TRỌNG
         return () => {
-            if (stompClient.active) {
-                stompClient.deactivate();
-                console.log("🔌 WebSocket Disconnected");
-            }
+            // Hủy kết nối ngay lập tức khi component unmount hoặc slug đổi
+            console.log("Đang ngắt kết nối socket cũ...");
+            stompClient.deactivate();
         };
     }, [slug]);
 
