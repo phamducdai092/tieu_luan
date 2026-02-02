@@ -1,5 +1,5 @@
 import type {UserBrief} from "@/types/user.type.ts";
-import type {RequestStatus} from "@/types/enum/request.status,type.ts";
+import type {RequestStatus} from "@/types/enum/request.status.type.ts";
 
 export type CreateInvitationPayload = {
     groupSlug: string;

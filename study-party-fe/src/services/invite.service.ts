@@ -1,7 +1,7 @@
 import http from "@/lib/http";
 import type { ApiResponse, UnwrappedResponse } from "@/types/api.type.ts";
 import type { InvitationRequest, InvitationResponse } from "@/types/group/invitation.type.ts";
-import type {RequestStatus} from "@/types/enum/request.status,type.ts";
+import type {RequestStatus} from "@/types/enum/request.status.type.ts";
 
 export const inviteService = {
     // ================= GROUP OWNER ACTIONS =================
