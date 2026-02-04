@@ -1,6 +1,6 @@
 package com.web.study.party.utils.filters;
 
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.user.UserSearchResponse;
 import com.web.study.party.utils.Paging;
@@ -9,9 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class UserFilter {
 

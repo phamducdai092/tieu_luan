@@ -1,7 +1,7 @@
 package com.web.study.party.utils.filters;
 
 import com.web.study.party.dto.response.ApiResponse;
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
 import com.web.study.party.dto.response.group.GroupCardResponse;
 import com.web.study.party.dto.response.group.JoinRequestResponse;
 import com.web.study.party.dto.response.user.UserJoinRequestResponse;

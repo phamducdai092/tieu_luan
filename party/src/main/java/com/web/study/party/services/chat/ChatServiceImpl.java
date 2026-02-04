@@ -3,6 +3,8 @@ package com.web.study.party.services.chat;
 import com.web.study.party.dto.kafka.ChatMessagePayload;
 import com.web.study.party.dto.mapper.group.task.AttachmentMapper;
 import com.web.study.party.dto.mapper.user.UserMapper;
+import com.web.study.party.dto.pagination.CursorMeta;
+import com.web.study.party.dto.pagination.CursorResponse;
 import com.web.study.party.dto.request.chat.SendMessageRequest;
 import com.web.study.party.dto.response.group.task.AttachmentResponse;
 import com.web.study.party.dto.response.user.UserBrief;
@@ -15,8 +17,6 @@ import com.web.study.party.repositories.group.GroupRepo;
 import com.web.study.party.services.fileStorage.FileStorageService;
 import com.web.study.party.utils.Helper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,37 +42,61 @@ public class ChatServiceImpl implements ChatService {
     private final AttachmentMapper attachmentMapper;
 
     @Override
-    public Page<ChatMessagePayload> getGroupChatMessages(Long groupId, Pageable pageable) {
-        // Query tin nhắn (JPA sẽ tự lazy load attachments khi gọi getAttachments)
-        Page<GroupMessages> messages = groupMessageRepo.findByGroupIdOrderByCreatedAtDesc(groupId, pageable);
+    public CursorResponse<ChatMessagePayload> getGroupChatMessages(Long groupId, Long cursorId, int limit) {
+        List<GroupMessages> messages;
 
-        return messages.map(msg -> {
+        if (cursorId == null) {
+            messages = groupMessageRepo.findTop20ByGroupIdOrderByCreatedAtDesc(groupId);
+        } else {
+            messages = groupMessageRepo.findTop20ByGroupIdAndIdLessThanOrderByCreatedAtDesc(groupId, cursorId);
+        }
+
+        // 2. Map Entity -> DTO (ChatMessagePayload)
+        List<ChatMessagePayload> payloadList = messages.stream().map(msg -> {
+            // [CẢNH BÁO] Đoạn này vẫn đang query N+1 để lấy Role.
+            // Nếu muốn tối ưu triệt để thì nên join bảng Member ngay từ Repository.
+            // Nhưng tạm thời để code chạy được đã nhé.
             GroupMembers member = groupMemberRepo.findByGroupIdAndUserId(groupId, msg.getSender().getId())
-                    .orElse(null); // Handle null cho an toàn
+                    .orElse(null);
 
             UserBrief senderBrief = (member != null)
                     ? userMapper.toUserBrief(member.getUser())
                     : userMapper.toUserBrief(msg.getSender());
 
-            // Map Entity Attachments -> DTO Response
-            List<AttachmentResponse> attResponses = new ArrayList<>();
-            if (msg.getAttachments() != null) {
-                attResponses = msg.getAttachments().stream()
-                        .map(attachmentMapper::toResponse).toList();
-            }
+            // Map Attachments (Lúc này đã được fetch sẵn nhờ @EntityGraph, không sợ Lazy load nữa)
+            List<AttachmentResponse> attResponses = (msg.getAttachments() != null)
+                    ? msg.getAttachments().stream().map(attachmentMapper::toResponse).toList()
+                    : new ArrayList<>();
 
             return new ChatMessagePayload(
                     msg.getId(),
                     senderBrief,
-                    (member != null) ? member.getRole() : null,
+                    (member != null) ? member.getRole() : null, // Role
                     groupId,
                     msg.getContent(),
                     msg.getType(),
                     msg.getCreatedAt(),
-                    true,
+                    true, // isGroup
                     attResponses
             );
-        });
+        }).toList();
+
+        String nextCursor = null;
+        if (!messages.isEmpty()) {
+            nextCursor = messages.get(messages.size() - 1).getId().toString();
+        }
+
+        // 3. Tạo Meta
+        CursorMeta meta = CursorMeta.builder()
+                .limit(limit)
+                .nextCursor(nextCursor)
+                .build();
+
+        // 4. Return Wrapper
+        return CursorResponse.<ChatMessagePayload>builder()
+                .data(payloadList)
+                .meta(meta)
+                .build();
     }
 
     @Override

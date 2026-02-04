@@ -1,6 +1,7 @@
 package com.web.study.party.api.attachment;
 
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
+import com.web.study.party.dto.pagination.PageResponse;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.group.task.AttachmentDetailResponse;
 import com.web.study.party.entities.Users;
@@ -33,22 +34,12 @@ public class AttachmentController {
             @RequestParam(defaultValue = "uploadedAt") String sort,
             HttpServletRequest req
     ) {
-        // 1. Tạo Pageable từ util
         Pageable pageable = Paging.parsePageable(page, size, sort);
 
-        // 2. Gọi Service
-        Page<AttachmentDetailResponse> result = attachmentService.getAttachmentsByGroup(groupId, user.getId(), pageable);
+        // 1. Gọi Service (Nhận về cục đã đóng gói sẵn)
+        PageResponse<AttachmentDetailResponse> result = attachmentService.getAttachmentsByGroup(groupId, user.getId(), pageable);
 
-        // 3. Tạo Meta data cho phân trang
-        PageMeta meta = PageMeta.builder()
-                .page(result.getNumber())
-                .size(result.getSize())
-                .totalItems(result.getTotalElements())
-                .totalPages(result.getTotalPages())
-                .sort(Paging.sortString(result.getSort()))
-                .build();
-
-        // 4. Trả về response chuẩn
-        return ResponseUtil.page(result.getContent(), meta, "Lấy danh sách tài liệu thành công", req);
+        // 2. Trả về (Không cần build meta ở đây nữa)
+        return ResponseUtil.page(result.getData(), result.getMeta(), "Lấy danh sách tài liệu thành công", req);
     }
 }

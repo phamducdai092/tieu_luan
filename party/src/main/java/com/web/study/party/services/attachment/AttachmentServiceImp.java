@@ -1,6 +1,8 @@
 package com.web.study.party.services.attachment;
 
 import com.web.study.party.dto.mapper.group.task.AttachmentMapper;
+import com.web.study.party.dto.pagination.PageMeta;
+import com.web.study.party.dto.pagination.PageResponse;
 import com.web.study.party.dto.response.group.task.AttachmentDetailResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.task.Attachment;
@@ -55,22 +57,51 @@ public class AttachmentServiceImp implements AttachmentService {
     }
 
     @Override
-    public Page<AttachmentDetailResponse> getMyAttachments(Long userId, Pageable pageable) {
-        Page<Attachment> attachments = attachmentRepository.findAllByUploadedByIdAndIsDeletedFalse(userId, pageable);
+    public PageResponse<AttachmentDetailResponse> getMyAttachments(Long userId, Pageable pageable) {
+        Page<Attachment> pageResult = attachmentRepository.findAllByUploadedByIdAndIsDeletedFalse(userId, pageable);
 
+        List<AttachmentDetailResponse> data = pageResult.map(attachmentMapper::toDetailResponse).getContent();
         // Map sang DTO
-        return attachments.map(attachmentMapper::toDetailResponse);
+        PageMeta meta = PageMeta.builder()
+                .page(pageResult.getNumber())
+                .size(pageResult.getSize())
+                .totalItems(pageResult.getTotalElements())
+                .totalPages(pageResult.getTotalPages())
+                // Giả sử Paging.sortString là hàm util của m
+                .sort(pageResult.getSort().toString())
+                .build();
+
+        return PageResponse.<AttachmentDetailResponse>builder()
+                .data(data)
+                .meta(meta)
+                .build();
     }
 
     @Override
-    public Page<AttachmentDetailResponse> getAttachmentsByGroup(Long groupId, Long userId, Pageable pageable) {
-        // 1. Kiểm tra quyền thành viên (phải là member mới xem được file)
+    public PageResponse<AttachmentDetailResponse> getAttachmentsByGroup(Long groupId, Long userId, Pageable pageable) {
+        // 1. Check quyền
         permissionChecker.requireMember(userId, groupId);
 
-        // 2. Query DB lấy Page<Entity>
-        Page<Attachment> attachments = attachmentRepository.findAllByGroupId(groupId, pageable);
+        // 2. Query DB
+        Page<Attachment> pageResult = attachmentRepository.findAllByGroupId(groupId, pageable);
 
-        // 3. Map Entity -> DTO (UserBrief đã được xử lý trong Mapper)
-        return attachments.map(attachmentMapper::toDetailResponse);
+        // 3. Map Data
+        List<AttachmentDetailResponse> data = pageResult.map(attachmentMapper::toDetailResponse).getContent();
+
+        // 4. Map Meta (Làm ngay tại Service)
+        PageMeta meta = PageMeta.builder()
+                .page(pageResult.getNumber())
+                .size(pageResult.getSize())
+                .totalItems(pageResult.getTotalElements())
+                .totalPages(pageResult.getTotalPages())
+                // Giả sử Paging.sortString là hàm util của m
+                .sort(pageResult.getSort().toString())
+                .build();
+
+        // 5. Đóng gói trả về
+        return PageResponse.<AttachmentDetailResponse>builder()
+                .data(data)
+                .meta(meta)
+                .build();
     }
 }

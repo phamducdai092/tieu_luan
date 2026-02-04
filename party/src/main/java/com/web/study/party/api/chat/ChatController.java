@@ -2,9 +2,10 @@ package com.web.study.party.api.chat;
 
 import com.web.study.party.dto.kafka.ChatMessagePayload;
 import com.web.study.party.dto.mapper.user.UserMapper;
+import com.web.study.party.dto.pagination.CursorResponse;
 import com.web.study.party.dto.request.chat.SendMessageRequest;
 import com.web.study.party.dto.response.ApiResponse;
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
 import com.web.study.party.dto.response.call.VideoCallResponse;
 import com.web.study.party.dto.response.user.UserBrief;
 import com.web.study.party.entities.Users;
@@ -41,21 +42,17 @@ public class ChatController {
     public ResponseEntity<ApiResponse<List<ChatMessagePayload>>> getGroupChatMessage(
             @AuthenticationPrincipal(expression = "user") Users user,
             @PathVariable Long groupId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int limit,
             HttpServletRequest httpRequest
     ) {
-        Pageable pageable = Pageable.ofSize(size).withPage(page);
-        PageMeta meta = PageMeta.builder()
-                .page(pageable.getPageNumber())
-                .size(pageable.getPageSize())
-                .build();
-        List<ChatMessagePayload> dummyPayload = chatService.getGroupChatMessages(groupId, pageable).getContent();
-        List<ChatMessagePayload> responseList = new ArrayList<>(dummyPayload);
+        CursorResponse<ChatMessagePayload> result = chatService.getGroupChatMessages(groupId, cursor, limit);
 
-        Collections.reverse(responseList);
+        // (Optional) Reverse list nếu cần thiết cho UI
+        List<ChatMessagePayload> finalData = new ArrayList<>(result.getData());
+        Collections.reverse(finalData);
 
-        return ResponseUtil.page(responseList, meta, "Fetched group chat messages", httpRequest);
+        return ResponseUtil.cursor(finalData, result.getMeta(), "Fetched group chat messages", httpRequest);
     }
 
     @PostMapping(value = "/group/{groupId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

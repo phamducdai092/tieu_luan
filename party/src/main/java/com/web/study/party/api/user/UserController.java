@@ -1,12 +1,12 @@
 package com.web.study.party.api.user;
 
 import com.web.study.party.dto.mapper.user.UserMapper;
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
+import com.web.study.party.dto.pagination.PageResponse;
 import com.web.study.party.dto.request.user.UserInformationUpdateRequest;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.auth.AuthResponse;
 import com.web.study.party.dto.response.group.task.AttachmentDetailResponse;
-import com.web.study.party.dto.response.group.task.AttachmentResponse;
 import com.web.study.party.dto.response.user.UserInformationResponse;
 import com.web.study.party.dto.response.user.UserSearchResponse;
 import com.web.study.party.entities.Users;
@@ -116,17 +116,8 @@ public class UserController {
         Pageable pageable = Paging.parsePageable(page, size, sort);
 
         // Gọi Service
-        Page<AttachmentDetailResponse> result = attachmentService.getMyAttachments(user.getId(), pageable);
+        PageResponse<AttachmentDetailResponse> result = attachmentService.getMyAttachments(user.getId(), pageable);
 
-        // Tạo Meta paging
-        PageMeta meta = PageMeta.builder()
-                .page(result.getNumber())
-                .size(result.getSize())
-                .totalItems(result.getTotalElements())
-                .totalPages(result.getTotalPages())
-                .sort(Paging.sortString(result.getSort()))
-                .build();
-
-        return ResponseUtil.page(result.getContent(), meta, "Lấy danh sách file cá nhân thành công", req);
+        return ResponseUtil.page(result.getData(), result.getMeta(), "Lấy danh sách file cá nhân thành công", req);
     }
 }

@@ -1,10 +1,9 @@
 package com.web.study.party.utils.filters;
 
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.admin.AdminFileResponse;
 import com.web.study.party.dto.response.admin.AdminGroupResponse;
-import com.web.study.party.dto.response.group.GroupResponse;
 import com.web.study.party.dto.response.admin.AdminUserResponse;
 import com.web.study.party.utils.ResponseUtil;
 import jakarta.servlet.http.HttpServletRequest;

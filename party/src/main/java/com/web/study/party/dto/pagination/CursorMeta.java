@@ -1,4 +1,4 @@
-package com.web.study.party.dto.page;
+package com.web.study.party.dto.pagination;
 
 import lombok.Builder;
 import lombok.Data;

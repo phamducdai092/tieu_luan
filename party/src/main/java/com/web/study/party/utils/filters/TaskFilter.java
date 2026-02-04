@@ -1,9 +1,8 @@
 package com.web.study.party.utils.filters;
 
-import com.web.study.party.dto.page.PageMeta;
+import com.web.study.party.dto.pagination.PageMeta;
 import com.web.study.party.dto.response.ApiResponse;
 import com.web.study.party.dto.response.group.task.SubmissionResponse;
-import com.web.study.party.dto.response.group.task.SubmissionStatusResponse;
 import com.web.study.party.dto.response.group.task.TaskSummaryResponse;
 import com.web.study.party.entities.enums.task.TaskStatus;
 import com.web.study.party.utils.Paging;
