@@ -15,8 +15,9 @@ import com.web.study.party.entities.group.GroupMembers;
 import com.web.study.party.entities.group.StudyGroups;
 import com.web.study.party.exception.BusinessException;
 import com.web.study.party.exception.ResourceNotFoundException;
-import com.web.study.party.repositories.UserRepo;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.user.UserRepo;
+import com.web.study.party.repositories.group.GroupSpecs;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
 import com.web.study.party.utils.PermissionChecker;
 import com.web.study.party.utils.slug.Slugger;
@@ -27,6 +28,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,19 +60,31 @@ public class GroupServiceImp implements GroupService {
 
     @Override
     public Page<GroupCardResponse> getJoinedGroups(Long userId, Pageable pageable) {
-        var page = groupRepo.findJoinedGroupCards(userId, pageable);
-        return page.map(groupMapper::toCardResponse);
+        // 1. Tạo Spec: Nhóm tôi đã tham gia
+        Specification<StudyGroups> spec = GroupSpecs.isJoinedBy(userId);
+
+        // 2. Query & Map
+        // Lưu ý: Mapper cần handle việc đếm memberCount
+        // Nếu dùng Entity thông thường, group.getMembers().size() có thể gây query chậm nếu ko optimize
+        return groupRepo.findAll(spec, pageable)
+                .map(groupMapper::toCardResponse);
     }
 
     @Override
     public Page<GroupCardResponse> getOwnedGroups(Long userId, Pageable pageable) {
-        var page = groupRepo.findOwnedGroupCards(userId, pageable);
-        return page.map(groupMapper::toCardResponse);
+        // 1. Tạo Spec: Nhóm tôi làm chủ
+        Specification<StudyGroups> spec = GroupSpecs.isOwnedBy(userId);
+
+        return groupRepo.findAll(spec, pageable)
+                .map(groupMapper::toCardResponse);
     }
 
     @Override
     public Page<GroupCardResponse> getDiscoverGroups(Long userId, Pageable pageable) {
-        return groupRepo.findDiscoverGroupCards(userId, pageable)
+        // 1. Tạo Spec: Logic tìm nhóm khám phá phức tạp nằm gọn trong 1 dòng này
+        Specification<StudyGroups> spec = GroupSpecs.isDiscoverableFor(userId);
+
+        return groupRepo.findAll(spec, pageable)
                 .map(groupMapper::toCardResponse);
     }
 
@@ -80,8 +94,6 @@ public class GroupServiceImp implements GroupService {
         StudyGroups group = getStudyGroup(slug);
 
         UserBrief ownerResponse = userMapper.toUserBrief(group.getOwner());
-
-        int memberCount = groupMemberRepo.countByGroupIdAndState(group.getId(), MemberState.APPROVED);
 
         MemberRole currentUserRole = MemberRole.GUEST;
 
@@ -104,8 +116,6 @@ public class GroupServiceImp implements GroupService {
             }
         }
 
-        System.out.println("User: " + (currentUser != null ? currentUser.getEmail() : "Guest") + " - Role: " + currentUserRole);
-
         return new GroupDetailResponse(
                 group.getId(),
                 group.getName(),
@@ -114,7 +124,7 @@ public class GroupServiceImp implements GroupService {
                 group.getTopic(),
                 group.getTopicColor(),
                 group.getMaxMembers(),
-                memberCount,
+                group.getMemberCount(),
                 group.getGroupPrivacy(),
                 group.getJoinPolicy(),
                 ownerResponse,
@@ -174,7 +184,7 @@ public class GroupServiceImp implements GroupService {
         Long gid = g.getId();
         perm.requireOwner(uid, gid);
         List<GroupMembers> gms = memberRepo.findAllByGroupId(gid);
-        for(GroupMembers gm : gms ) {
+        for (GroupMembers gm : gms) {
             gm.setState(MemberState.LEFT);
             gm.setRole(MemberRole.GUEST);
         }

@@ -44,7 +44,7 @@ public class GroupMemberController {
         Pageable pageable = Paging.parsePageable(page, size, sort);
 
         // 2. Call Service (Trả về Page<MemberResponse>)
-        Page<MemberResponse> membersPage = memberService.getMembers(gid, user, pageable);
+        Page<MemberResponse> membersPage = memberService.getMembers(gid, user, keyword, role, pageable);
 
         // 3. Build Filter Map (Gọn, đẹp, dễ đọc)
         Map<String, Object> filters = FilterBuilder.create()

@@ -12,7 +12,7 @@ import com.web.study.party.entities.group.GroupMembers;
 import com.web.study.party.entities.message.GroupMessages;
 import com.web.study.party.exception.ResourceNotFoundException;
 import com.web.study.party.repositories.chat.GroupMessageRepo;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
 import com.web.study.party.services.fileStorage.FileStorageService;
 import com.web.study.party.utils.Helper;

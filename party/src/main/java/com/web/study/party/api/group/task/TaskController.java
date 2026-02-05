@@ -117,6 +117,7 @@ public class TaskController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) TaskStatus status,
+            @RequestParam(required = false) String keyword,
             @AuthenticationPrincipal(expression = "user") Users user,
             HttpServletRequest req) {
 
@@ -124,7 +125,7 @@ public class TaskController {
 
         Pageable pageable = Paging.parsePageable(page, size, sort);
 
-        Page<TaskSummaryResponse> taskPage = taskService.listTasks(groupId, status, pageable);
+        Page<TaskSummaryResponse> taskPage = taskService.listTasks(groupId, keyword, pageable);
 
         Map<String, Object> filters = FilterBuilder.create()
                 .add("status", status)

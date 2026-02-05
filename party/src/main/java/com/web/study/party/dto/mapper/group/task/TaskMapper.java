@@ -2,13 +2,10 @@ package com.web.study.party.dto.mapper.group.task;
 
 import com.web.study.party.dto.mapper.user.UserMapper;
 import com.web.study.party.dto.response.group.task.*;
-import com.web.study.party.dto.response.user.UserBrief;
 import com.web.study.party.entities.task.Attachment;
 import com.web.study.party.entities.task.Task;
 import com.web.study.party.entities.task.TaskAssignment;
 import com.web.study.party.entities.task.TaskSubmission;
-import com.web.study.party.repositories.group.task.TaskAssignmentRepository;
-import com.web.study.party.repositories.group.task.TaskSubmissionRepository;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 

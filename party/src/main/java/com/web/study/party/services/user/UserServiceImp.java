@@ -7,10 +7,12 @@ import com.web.study.party.dto.response.user.UserSearchResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.exception.BusinessException;
 import com.web.study.party.exception.ResourceNotFoundException;
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
+import com.web.study.party.repositories.user.UserSpecs;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +54,12 @@ public class UserServiceImp implements UserService {
 
     @Override
     public Page<UserSearchResponse> searchUsers(String keyword, Pageable pageable) {
-        Page<Users> usersPage = userRepo.searchUsers(keyword, pageable);
+        Specification<Users> spec = Specification.allOf(
+                UserSpecs.containsKeyword(keyword),
+                UserSpecs.isVerified()
+        );
+
+        Page<Users> usersPage = userRepo.findAll(spec, pageable);
 
         return usersPage.map(mapper::toUserSearchResponse);
     }

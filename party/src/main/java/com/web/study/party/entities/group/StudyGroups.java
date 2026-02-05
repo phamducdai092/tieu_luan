@@ -7,6 +7,7 @@ import com.web.study.party.entities.enums.group.GroupTopic;
 import com.web.study.party.entities.enums.group.JoinPolicy;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.Instant;
 import java.util.List;
@@ -40,6 +41,8 @@ public class StudyGroups {
     private String topicColor;
 
     private Integer maxMembers = 100;
+    @Formula("(select count(gm.id) from group_members gm where gm.group_id = id and gm.state = 'APPROVED')")
+    private int memberCount;
 
     private Instant createdAt;
     private Instant updatedAt;

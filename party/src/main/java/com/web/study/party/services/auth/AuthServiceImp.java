@@ -12,7 +12,7 @@ import com.web.study.party.exception.BadRequestException;
 import com.web.study.party.exception.UnverifiedAccountException;
 import com.web.study.party.jwt.JwtProperties;
 import com.web.study.party.jwt.JwtService;
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.services.mail.MailService;
 import com.web.study.party.services.otp.OtpService;
 import com.web.study.party.session.RefreshTokenStore;

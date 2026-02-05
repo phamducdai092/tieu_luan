@@ -1,4 +1,4 @@
-package com.web.study.party.repositories.group.task;
+package com.web.study.party.repositories.task.assignment;
 
 import com.web.study.party.entities.task.TaskAssignment;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,11 +11,9 @@ import java.util.List;
 
 @Repository
 public interface TaskAssignmentRepository extends JpaRepository<TaskAssignment, Long> {
-    
+
     List<TaskAssignment> findByTaskId(Long taskId);
 
-    boolean existsByTaskIdAndUserId(Long taskId, Long userId);
-    
     // Đếm số lượng người đã được giao task này
     long countByTaskId(Long taskId);
 

@@ -9,10 +9,11 @@ import com.web.study.party.entities.group.GroupInvite;
 import com.web.study.party.entities.group.StudyGroups;
 import com.web.study.party.exception.BadRequestException;
 import com.web.study.party.exception.ResourceNotFoundException;
-import com.web.study.party.repositories.UserRepo;
-import com.web.study.party.repositories.group.GroupInviteRepo;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.user.UserRepo;
+import com.web.study.party.repositories.group.invite.GroupInviteRepo;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
+import com.web.study.party.repositories.group.invite.GroupInviteSpecs;
 import com.web.study.party.services.mail.MailService;
 import com.web.study.party.services.notification.NotificationService;
 import com.web.study.party.utils.socket.SocketConst;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
@@ -217,7 +219,14 @@ public class InvitationServiceImp implements InvitationService {
         if (!hasPermission) {
             throw new AccessDeniedException("Bạn không có quyền xem danh sách lời mời của nhóm này.");
         }
-        return groupInviteRepo.findInvitationsForGroup(group.getId(), status, keyword, pageable)
+
+        Specification<GroupInvite> spec = Specification.allOf(
+                GroupInviteSpecs.hasGroupId(group.getId()),
+                GroupInviteSpecs.hasStatus(status),
+                GroupInviteSpecs.searchForGroup(keyword)
+        );
+
+        return groupInviteRepo.findAll(spec, pageable)
                 .map(invitationMapper::toResponse);
     }
 
@@ -226,8 +235,14 @@ public class InvitationServiceImp implements InvitationService {
             @AuthenticationPrincipal(expression = "user") Users invitee,
             RequestStatus status, String keyword, Pageable pageable
     ) {
-        // Code cũ giữ nguyên
-        return groupInviteRepo.findInvitationsForUser(invitee.getId(), status, keyword, pageable)
+
+        Specification<GroupInvite> spec = Specification.allOf(
+                GroupInviteSpecs.hasInviteeId(invitee.getId()),
+                GroupInviteSpecs.hasStatus(status),
+                GroupInviteSpecs.searchForUser(keyword)
+        );
+
+        return groupInviteRepo.findAll(spec, pageable)
                 .map(invitationMapper::toResponse);
     }
 }

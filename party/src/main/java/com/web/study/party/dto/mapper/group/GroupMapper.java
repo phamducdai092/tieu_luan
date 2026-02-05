@@ -5,7 +5,6 @@ import com.web.study.party.dto.response.admin.AdminGroupResponse;
 import com.web.study.party.dto.response.group.GroupCardResponse;
 import com.web.study.party.dto.response.group.GroupResponse;
 import com.web.study.party.entities.group.StudyGroups;
-import com.web.study.party.repositories.projection.GroupCardProjection;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -21,7 +20,7 @@ public interface GroupMapper {
     @Mapping(target = "ownerId", source = "owner.id")
     GroupResponse toResponse(StudyGroups g);
 
-    GroupCardResponse toCardResponse(GroupCardProjection g);
+    GroupCardResponse toCardResponse(StudyGroups g);
 
     AdminGroupResponse toAdminGroupResponse(StudyGroups g);
 

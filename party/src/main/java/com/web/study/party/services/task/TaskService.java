@@ -24,7 +24,7 @@ public interface TaskService {
     TaskDetailResponse getTaskDetails(Long taskId, Long groupId, Long userId);
 
     // 4. Danh sách bài tập (Phân trang)
-    Page<TaskSummaryResponse> listTasks(Long groupId, TaskStatus status, Pageable pageable);
+    Page<TaskSummaryResponse> listTasks(Long groupId, String keyword, Pageable pageable);
 
     // 5. Nộp bài (kèm file)
     SubmissionResponse submitTask(Long taskId, Long groupId, Long userId, SubmitTaskRequest request, List<MultipartFile> files);

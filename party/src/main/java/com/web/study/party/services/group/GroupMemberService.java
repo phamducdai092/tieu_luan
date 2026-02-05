@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface GroupMemberService {
-    Page<MemberResponse> getMembers(Long groupId, Users user, Pageable pageable);
+    Page<MemberResponse> getMembers(Long groupId, Users user, String keyword, MemberRole role, Pageable pageable);
 
     void addMember(Long groupId, Long userId);
 

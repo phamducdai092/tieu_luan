@@ -6,13 +6,15 @@ import com.web.study.party.entities.Users;
 import com.web.study.party.entities.task.Attachment;
 import com.web.study.party.entities.task.Task;
 import com.web.study.party.entities.task.TaskSubmission;
-import com.web.study.party.repositories.group.task.AttachmentRepository;
+import com.web.study.party.repositories.attachment.AttachmentRepository;
+import com.web.study.party.repositories.attachment.AttachmentSpecs;
 import com.web.study.party.services.fileStorage.FileStorageService;
 import com.web.study.party.utils.Helper;
 import com.web.study.party.utils.PermissionChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,7 +59,11 @@ public class AttachmentServiceImp implements AttachmentService {
     @Override
     public Page<AttachmentDetailResponse> getMyAttachments(Long userId, Pageable pageable) {
         // 1. Query DB lấy Page<Entity>
-        Page<Attachment> pageResult = attachmentRepository.findAllByUploadedByIdAndIsDeletedFalse(userId, pageable);
+        Specification<Attachment> spec = Specification.allOf(
+                AttachmentSpecs.isNotDeleted(),
+                AttachmentSpecs.uploadedBy(userId)
+        );
+        Page<Attachment> pageResult = attachmentRepository.findAll(spec, pageable);
 
         // 2. Map sang Page<DTO> và trả về luôn (Spring lo phần còn lại)
         return pageResult.map(attachmentMapper::toDetailResponse);
@@ -69,7 +75,11 @@ public class AttachmentServiceImp implements AttachmentService {
         permissionChecker.requireMember(userId, groupId);
 
         // 2. Query DB
-        Page<Attachment> pageResult = attachmentRepository.findAllByGroupId(groupId, pageable);
+        Specification<Attachment> spec = Specification.allOf(
+                AttachmentSpecs.isNotDeleted(),
+                AttachmentSpecs.belongsToGroup(groupId)
+        );
+        Page<Attachment> pageResult = attachmentRepository.findAll(spec, pageable);
 
         // 3. Map sang Page<DTO> và trả về
         return pageResult.map(attachmentMapper::toDetailResponse);

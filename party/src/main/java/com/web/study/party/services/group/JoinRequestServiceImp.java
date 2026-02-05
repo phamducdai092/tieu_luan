@@ -15,16 +15,19 @@ import com.web.study.party.entities.group.JoinGroupRequest;
 import com.web.study.party.entities.group.StudyGroups;
 import com.web.study.party.exception.BadRequestException;
 import com.web.study.party.exception.ResourceNotFoundException;
-import com.web.study.party.repositories.UserRepo;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.user.UserRepo;
+import com.web.study.party.repositories.group.joinRequest.JoinRequestSpecs;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
-import com.web.study.party.repositories.group.JoinGroupRequestRepo;
+import com.web.study.party.repositories.group.joinRequest.JoinGroupRequestRepo;
+import com.web.study.party.repositories.group.member.GroupMemberSpecs;
 import com.web.study.party.services.notification.NotificationService;
 import com.web.study.party.utils.socket.SocketConst;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,7 +106,16 @@ public class JoinRequestServiceImp implements JoinRequestService {
         notificationService.sendNotification(owner, notifContent, link, SocketConst.EVENT_JOIN_REQUEST);
 
         // 2. Gửi cho các Mod (Lọc ra các member có role MOD)
-        List<Users> mods = groupMemberRepo.findModsBySlug(slug);
+        Specification<GroupMembers> modSpec = Specification.allOf(
+                GroupMemberSpecs.hasGroupSlug(slug),
+                GroupMemberSpecs.hasRole(MemberRole.MOD)
+        );
+
+        List<Users> mods = groupMemberRepo.findAll(modSpec)
+                .stream()
+                .map(GroupMembers::getUser)
+                .toList();
+
         for (Users mod : mods) {
             notificationService.sendNotification(mod, notifContent, link, SocketConst.EVENT_JOIN_REQUEST);
         }
@@ -143,9 +155,13 @@ public class JoinRequestServiceImp implements JoinRequestService {
             throw new AccessDeniedException("Bạn không có quyền xem danh sách yêu cầu của nhóm này.");
         }
 
-        Page<JoinGroupRequest> requests = joinRequestRepo.findByGroupAndStatus(group, RequestStatus.PENDING, pageable);
+        Specification<JoinGroupRequest> spec = Specification.allOf(
+                JoinRequestSpecs.hasGroupId(group.getId()),
+                JoinRequestSpecs.hasStatus(RequestStatus.PENDING)
+        );
 
-        return requests.map(joinRequestMapper::toResponse);
+        return joinRequestRepo.findAll(spec, pageable)
+                .map(joinRequestMapper::toResponse);
     }
 
     @Override
@@ -153,7 +169,9 @@ public class JoinRequestServiceImp implements JoinRequestService {
         Users user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với ID: " + userId));
 
-        Page<JoinGroupRequest> requestPage = joinRequestRepo.findByUser(user, pageable);
+        Specification<JoinGroupRequest> spec = JoinRequestSpecs.hasUserId(userId);
+
+        Page<JoinGroupRequest> requestPage = joinRequestRepo.findAll(spec, pageable);
 
         if (requestPage.isEmpty()) {
             return Page.empty(pageable);
@@ -173,13 +191,8 @@ public class JoinRequestServiceImp implements JoinRequestService {
 
         List<UserJoinRequestResponse> content = requestPage.getContent().stream()
                 .map(requestEntity -> {
-                    // Map request entity sang DTO
                     JoinRequestResponse requestDto = joinRequestMapper.toResponse(requestEntity);
-
-                    // Lấy Group DTO từ Map dựa vào ID
-                    // Dùng getOrDefault hoặc check null phòng trường hợp Group bị xóa cứng
                     GroupResponse groupDto = groupMap.get(requestDto.groupId());
-
                     return new UserJoinRequestResponse(requestDto, groupDto);
                 })
                 .toList();

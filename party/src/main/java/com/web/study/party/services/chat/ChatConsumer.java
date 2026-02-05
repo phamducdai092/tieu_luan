@@ -10,9 +10,9 @@ import com.web.study.party.entities.group.GroupMembers;
 import com.web.study.party.entities.group.StudyGroups;
 import com.web.study.party.entities.message.GroupMessages;
 import com.web.study.party.entities.task.Attachment;
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.repositories.chat.GroupMessageRepo;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
 import com.web.study.party.socket.SocketMessage;
 import com.web.study.party.utils.socket.SocketConst;
@@ -38,7 +38,7 @@ public class ChatConsumer {
     private final GroupMessageRepo groupMessageRepository;
     private final UserRepo userRepository;
     private final GroupRepo groupRepo;
-    private final GroupMemberRepo groupMemberRepo; // 👈 1. Inject thêm Repo này
+    private final GroupMemberRepo groupMemberRepo;
 
     @KafkaListener(
             topics = {KafkaConfig.GROUP_CHAT_TOPIC},

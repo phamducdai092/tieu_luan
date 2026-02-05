@@ -1,6 +1,6 @@
 package com.web.study.party.jwt;
 
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.config.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

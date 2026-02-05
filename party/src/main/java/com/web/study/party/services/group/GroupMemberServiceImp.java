@@ -9,15 +9,17 @@ import com.web.study.party.entities.group.GroupMembers;
 import com.web.study.party.entities.group.StudyGroups;
 import com.web.study.party.exception.BusinessException;
 import com.web.study.party.exception.ResourceNotFoundException;
-import com.web.study.party.repositories.UserRepo;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.user.UserRepo;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
+import com.web.study.party.repositories.group.member.GroupMemberSpecs;
 import com.web.study.party.services.notification.NotificationService;
 import com.web.study.party.utils.PermissionChecker;
 import com.web.study.party.utils.socket.SocketConst;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,13 +39,21 @@ public class GroupMemberServiceImp implements GroupMemberService {
     private final NotificationService notificationService;
 
     @Override
-    public Page<MemberResponse> getMembers(Long groupId, Users user, Pageable pageable) {
+    public Page<MemberResponse> getMembers(Long groupId, Users user, String keyword, MemberRole role, Pageable pageable) {
 
         permissionChecker.requireMember(user.getId(), groupId);
 
-        Page<GroupMembers> members = groupMemberRepo.findByGroupIdAndState(groupId, MemberState.APPROVED, pageable);
+        // 2. Tạo Spec (Thay vì chỉ gọi findByGroupIdAndState)
+        Specification<GroupMembers> spec = Specification.allOf(
+                GroupMemberSpecs.hasGroupId(groupId),
+                GroupMemberSpecs.hasState(MemberState.APPROVED), // Chỉ lấy người đã vào nhóm
+                GroupMemberSpecs.hasRole(role),     // Lọc theo Role (nếu có)
+                GroupMemberSpecs.containsKeyword(keyword) // Tìm theo tên/email
+        );
 
-        return members.map(groupMemberMapper::toMemberResponse);
+        // 3. Query & Map
+        return groupMemberRepo.findAll(spec, pageable)
+                .map(groupMemberMapper::toMemberResponse);
     }
 
     @Override

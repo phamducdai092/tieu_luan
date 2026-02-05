@@ -1,7 +1,7 @@
 package com.web.study.party.services.account;
 
 import com.web.study.party.dto.request.verify.*;
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.services.mail.MailService;
 import com.web.study.party.services.otp.OtpService;
 import com.web.study.party.session.RefreshTokenStore;

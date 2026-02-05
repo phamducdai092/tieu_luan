@@ -1,7 +1,7 @@
 package com.web.study.party.utils;
 
 import com.web.study.party.entities.enums.group.MemberRole;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

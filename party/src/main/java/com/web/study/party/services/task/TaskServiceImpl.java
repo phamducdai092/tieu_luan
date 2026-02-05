@@ -13,21 +13,22 @@ import com.web.study.party.entities.task.TaskAssignment;
 import com.web.study.party.entities.task.TaskSubmission;
 import com.web.study.party.exception.BusinessException;
 import com.web.study.party.exception.ResourceNotFoundException;
-import com.web.study.party.repositories.*;
-import com.web.study.party.repositories.group.GroupMemberRepo;
+import com.web.study.party.repositories.group.member.GroupMemberRepo;
 import com.web.study.party.repositories.group.GroupRepo;
-import com.web.study.party.repositories.group.task.AttachmentRepository;
-import com.web.study.party.repositories.group.task.TaskAssignmentRepository;
-import com.web.study.party.repositories.group.task.TaskRepository;
-import com.web.study.party.repositories.group.task.TaskSubmissionRepository;
+import com.web.study.party.repositories.task.TaskSpecs;
+import com.web.study.party.repositories.task.assignment.TaskAssignmentRepository;
+import com.web.study.party.repositories.task.TaskRepository;
+import com.web.study.party.repositories.task.submission.TaskSubmissionRepository;
+import com.web.study.party.repositories.task.submission.TaskSubmissionSpecs;
+import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.services.attachment.AttachmentService;
 import com.web.study.party.services.notification.NotificationService;
-import com.web.study.party.utils.Helper;
 import com.web.study.party.utils.socket.SocketConst;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,7 +58,7 @@ public class TaskServiceImpl implements TaskService {
     // --- CONSTANTS ---
     private static final int MAX_ASSIGNEES = 5;
     private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-//    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("doc", "docx", "xls", "xlsx", "txt", "pdf", "zip", "rar");
+    //    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("doc", "docx", "xls", "xlsx", "txt", "pdf", "zip", "rar");
     private final GroupRepo groupRepo;
 
     // ================= 1. CREATE TASK =================
@@ -145,10 +146,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public SubmissionResponse submitTask(Long taskId, Long groupId, Long userId, SubmitTaskRequest request, List<MultipartFile> files) {
         Task task = getTaskOrThrow(taskId, groupId);
-
-//        if (task.getDeadline().isBefore(Instant.now())) {
-//            throw new BusinessException("Đã quá hạn nộp bài");
-//        }
 
         TaskSubmission submission = submissionRepo.findByTaskIdAndUserId(taskId, userId)
                 .orElseThrow(() -> new BusinessException("Bạn không được giao bài tập này"));
@@ -245,18 +242,25 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Page<TaskSummaryResponse> listTasks(Long groupId, TaskStatus status, Pageable pageable) {
+    public Page<TaskSummaryResponse> listTasks(Long groupId, String keyword, Pageable pageable) {
         // Query tasks
-        Page<Task> tasks = taskRepo.findByGroupIdAndIsDeletedFalse(groupId, pageable);
+        Specification<Task> spec = Specification.allOf(
+                TaskSpecs.hasGroupId(groupId),
+                TaskSpecs.isNotDeleted(),
+                TaskSpecs.titleContains(keyword)
+        );
 
-        // Map Page<Entity> -> Page<DTO> dùng Mapper
-        // Logic custom cho field mySubmissionStatus nếu cần (sẽ tốn query N+1, nên cân nhắc)
-        return tasks.map(taskMapper::toSummaryResponse);
+        return taskRepo.findAll(spec, pageable)
+                .map(taskMapper::toSummaryResponse);
     }
 
     @Override
     public Page<SubmissionResponse> getSubmissionStatuses(Long taskId, Long groupId, Long userId, Pageable pageable) {
-        Page<TaskSubmission> submissions = submissionRepo.findByTaskId(taskId, pageable);
+        Specification<TaskSubmission> spec = Specification.allOf(
+                TaskSubmissionSpecs.hasTaskId(taskId)
+        );
+
+        Page<TaskSubmission> submissions = submissionRepo.findAll(spec, pageable);
 
         return submissions.map(sub -> {
             Users u = userRepo.findById(sub.getUserId()).orElse(new Users());
@@ -314,9 +318,6 @@ public class TaskServiceImpl implements TaskService {
 
         for (MultipartFile f : files) {
             if (f.getSize() > MAX_FILE_SIZE) throw new BusinessException("File too large > 50MB");
-//            String ext = Helper.getExtension(f.getOriginalFilename());
-//            if (!ALLOWED_EXTENSIONS.contains(ext.toLowerCase()))
-//                throw new BusinessException("File hiện tại chưa hỗ trợ cho : " + ext);
         }
     }
 

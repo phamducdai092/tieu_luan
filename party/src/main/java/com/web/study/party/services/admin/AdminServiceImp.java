@@ -1,6 +1,5 @@
 package com.web.study.party.services.admin;
 
-import com.web.study.party.dto.mapper.group.GroupMapper;
 import com.web.study.party.dto.mapper.group.task.AttachmentMapper;
 import com.web.study.party.dto.mapper.user.UserMapper;
 import com.web.study.party.dto.response.admin.AdminDashboardResponse;
@@ -10,12 +9,14 @@ import com.web.study.party.dto.response.admin.AdminUserResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.AccountStatus;
 import com.web.study.party.entities.group.StudyGroups;
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.repositories.group.GroupRepo;
-import com.web.study.party.repositories.group.task.AttachmentRepository;
+import com.web.study.party.repositories.group.GroupSpecs;
+import com.web.study.party.repositories.attachment.AttachmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -92,8 +93,18 @@ public class AdminServiceImp implements AdminService {
 
     @Override
     public Page<AdminGroupResponse> getAllGroups(String keyword, Pageable pageable) {
-        String searchKey = (keyword != null && !keyword.trim().isEmpty()) ? keyword : null;
-        return groupRepo.findByNameContainingIgnoreCase(searchKey, pageable);
+        Specification<StudyGroups> spec = GroupSpecs.nameContains(keyword);
+
+        return groupRepo.findAll(spec, pageable)
+                // AdminGroupResponse có constructor nhận Entity thì map thẳng, hoặc dùng mapper
+                .map(group -> new AdminGroupResponse(
+                        group.getId(), group.getName(), group.getSlug(),
+                        group.getDescription(), group.getTopic(), group.getTopicColor(),
+                        group.getMaxMembers(),
+                        (long) group.getMemberCount(), // Count member
+                        group.getOwner().getId(),
+                        group.getCreatedAt(), group.isActive(), group.isDeleted()
+                ));
     }
 
     @Override

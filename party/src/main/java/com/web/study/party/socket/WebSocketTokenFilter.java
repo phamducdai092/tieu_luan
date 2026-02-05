@@ -2,7 +2,7 @@ package com.web.study.party.socket;
 
 import com.web.study.party.entities.Users;
 import com.web.study.party.jwt.JwtService;
-import com.web.study.party.repositories.UserRepo;
+import com.web.study.party.repositories.user.UserRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
