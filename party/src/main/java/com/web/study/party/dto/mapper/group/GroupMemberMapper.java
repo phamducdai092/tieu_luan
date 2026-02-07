@@ -12,5 +12,6 @@ public interface GroupMemberMapper {
     @Mapping(target = "member.displayName", source = "gm.user.displayName")
     @Mapping(target = "member.avatarUrl", source = "gm.user.avatarUrl")
     @Mapping(target = "role", source = "gm.role")
+    @Mapping(target = "joinedAt", source = "gm.joinedAt")
     MemberResponse toMemberResponse(GroupMembers gm);
 }

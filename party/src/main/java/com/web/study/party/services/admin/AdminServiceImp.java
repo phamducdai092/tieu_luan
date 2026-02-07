@@ -9,6 +9,8 @@ import com.web.study.party.dto.response.admin.AdminUserResponse;
 import com.web.study.party.entities.Users;
 import com.web.study.party.entities.enums.AccountStatus;
 import com.web.study.party.entities.group.StudyGroups;
+import com.web.study.party.entities.task.Attachment;
+import com.web.study.party.repositories.attachment.AttachmentSpecs;
 import com.web.study.party.repositories.user.UserRepo;
 import com.web.study.party.repositories.group.GroupRepo;
 import com.web.study.party.repositories.group.GroupSpecs;
@@ -117,9 +119,12 @@ public class AdminServiceImp implements AdminService {
 
     @Override
     public Page<AdminFileResponse> getAllFiles(String keyword, Pageable pageable) {
-        if (keyword != null && !keyword.isEmpty()) {
-            return attachmentRepo.findByFileNameContainingIgnoreCase(keyword, pageable);
-        }
-        return attachmentRepo.findAll(pageable).map(attachmentMapper::toAdminFileResponse);
+
+        Specification<Attachment> spec = Specification.allOf(
+                AttachmentSpecs.fileNameContains(keyword)
+        );
+
+        return attachmentRepo.findAll(spec, pageable)
+                .map(attachmentMapper::toAdminFileResponse);
     }
 }
